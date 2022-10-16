@@ -1,0 +1,119 @@
+{
+	"compiler": {
+		"version": "0.8.15+commit.e14f2714"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newBase",
+						"type": "address"
+					}
+				],
+				"name": "asignBase",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newForwarder",
+						"type": "address"
+					}
+				],
+				"name": "asignForwarder",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "newOrg",
+						"type": "address"
+					}
+				],
+				"name": "asignOrg",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "admin",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "receiver",
+						"type": "address"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "salt",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "address[]",
+						"name": "list",
+						"type": "address[]"
+					}
+				],
+				"name": "createContract",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "contractAddress_",
+						"type": "address"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"kind": "dev",
+			"methods": {},
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"interfaces/IFactory.sol": "IFactory"
+		},
+		"evmVersion": "london",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"interfaces/IFactory.sol": {
+			"keccak256": "0x15329b8418d8258e2c77b8c5ab91b8eb62080d346098acba88ef9bfb96e1b1bc",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://bb23b69e26a72084ee7da2d597dbbf6ac328af770d029d9f9fde72c5218ce083",
+				"dweb:/ipfs/QmQxFTTfrx6FQzGwtqS2RcaNL3pjxjwFsmCzj7e3a4mVnu"
+			]
+		}
+	},
+	"version": 1
+}
