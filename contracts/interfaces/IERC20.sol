@@ -1,0 +1,8 @@
+// SPDX-License-Identifier: MIT
+// OpenZeppelin Contracts (last updated v4.6.0) (token/ERC20/IERC20.sol)
+
+pragma solidity ^0.8.7;
+
+interface IERC20 {
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
+}
