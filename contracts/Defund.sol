@@ -2,17 +2,23 @@
 pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract DeeFund is ERC721{
+contract DeeFund is ERC721, Ownable{
     address public org;
     uint public tokenCounter;
     mapping (uint => string) URIs;
 
-    constructor(address org_)
+    constructor(address org_, address owner)
         ERC721("Deefund", "DEFNFT")
     {
         tokenCounter = 1;
         org = org_;
+        /**
+          Ownership is transfered eventhough their are no access point for owner is to prove the Ownership
+          to opensea so the creator can edit the event.
+        */
+        transferOwnership(owner);
     }
 
     function mint(address donor, string calldata uri) external returns(uint256){
