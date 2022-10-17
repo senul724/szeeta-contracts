@@ -4,13 +4,13 @@ pragma solidity ^0.8.4;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract DeeFund is ERC721, Ownable{
+contract RewardNFT is ERC721, Ownable{
     address public org;
     uint public tokenCounter;
     mapping (uint => string) URIs;
 
-    constructor(address org_, address owner)
-        ERC721("Deefund", "DEFNFT")
+    constructor(address owner, address org_, string memory name, string memory symbol)
+        ERC721(name, symbol)
     {
         tokenCounter = 1;
         org = org_;
