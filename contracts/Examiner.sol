@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 contract Examiner is EIP712{
     using ECDSA for bytes32;
     // Address of the organization
-    address org;
+    address public org;
     // factor when calculating fees
     uint256 public feeFactor;
 
