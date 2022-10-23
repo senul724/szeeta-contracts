@@ -162,6 +162,11 @@ contract Examiner is EIP712{
         transferNativeFunds(amount, receiver);
     }
 
+    function changeOrg(address newOrg) external {
+        require(msg.sender == org);
+        org = newOrg;
+    }
+
     // utils
     function getTime() external view returns(uint256){
         return block.timestamp;
