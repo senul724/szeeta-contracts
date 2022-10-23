@@ -4,15 +4,14 @@ pragma solidity ^0.8.7;
 import "./NetworkAdmin.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Administration is EIP712{
+contract Administration is EIP712, Ownable{
     using ECDSA for bytes32;
     // Event count
     uint256 public eventCounter;
     // Fee factor
     uint256 public feeFactor;
-    // Address of the Owner contract
-    address public org;
 
     // Structs
     struct ChainData{
@@ -44,20 +43,13 @@ contract Administration is EIP712{
     // keep intrack of the proccesed transactions
     mapping(uint256 => bool) isExpired;
 
-    // modifiers
-    modifier onlyOrg() {
-        require(msg.sender == org, "Unauthorized Caller!");
-        _;
-    }
-
-    constructor(address org_, uint feeFactor_) EIP712('szeeta', '0.0.1'){
-        org = org_;
+    constructor(uint feeFactor_) EIP712('szeeta', '0.0.1'){
         feeFactor = feeFactor_;
         eventCounter = 1;
     }
 
     // Event creation
-    function createEvent(address owner, ChainData[] calldata chainData) external onlyOrg returns(uint){
+    function createEvent(address owner, ChainData[] calldata chainData) external onlyOwner returns(uint){
         // Asigning event id to a local varible to save gas
         uint eventId = eventCounter;
         owners[eventId] = owner;
@@ -83,7 +75,7 @@ contract Administration is EIP712{
         bytes calldata signature
     ) 
         external 
-        onlyOrg
+        onlyOwner
     {
         authorizedAndOpen(caller, eventId, nonce, signature);
         NetworkAdmin(networkAdmins[chainId]).changeReceiver(newReceiver, eventId);
@@ -98,7 +90,7 @@ contract Administration is EIP712{
         bytes calldata signature
     )
         external
-        onlyOrg
+        onlyOwner
     {   
         authorizedAndOpen(caller, eventId, nonce, signature);
         closed[eventId] = true;
@@ -113,36 +105,31 @@ contract Administration is EIP712{
         bytes calldata signature
     )
         external
-        onlyOrg
+        onlyOwner
     {
         authorizedAndOpen(caller, eventId, nonce, signature);
         owners[eventId] = newOwner;
     }
 
-    // For organizational use
-    function changeOrg(address newOrg) external onlyOrg{
-        org = newOrg;
-    }
-
     // Changing the fee factor
-    function changeFeeFactor(uint newFeeFactor) external onlyOrg{
+    function changeFeeFactor(uint newFeeFactor) external onlyOwner{
         feeFactor = newFeeFactor;
     }
 
     // Adding new network support
-    function addNetwork(uint netId) external onlyOrg{
+    function addNetwork(uint netId) external onlyOwner{
         require(networkAdmins[netId] == address(0), "Network already initialized!");
         NetworkAdmin newNetwork = new NetworkAdmin(netId);
         networkAdmins[netId] = address(newNetwork);
     }
 
     // Recording received native contributions
-    function recordNativeContribution(uint eventId, uint amount, uint netId) external onlyOrg{
+    function recordNativeContribution(uint eventId, uint amount, uint netId) external onlyOwner{
         NetworkAdmin(networkAdmins[netId]).addNativeContributions(eventId, amount, feeFactor);
     }
 
     // Recording received native contributions
-    function recordTokenContribution(uint eventId, uint amount, uint netId, address token) external onlyOrg{
+    function recordTokenContribution(uint eventId, uint amount, uint netId, address token) external onlyOwner{
         NetworkAdmin(networkAdmins[netId]).addTokenContributions(eventId, amount, token);
     }
 
