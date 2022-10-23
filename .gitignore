@@ -9,3 +9,6 @@ build/
 
 # Dotenv file
 .env
+
+# external scripts
+asuchi/
