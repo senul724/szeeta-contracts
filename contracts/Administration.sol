@@ -126,12 +126,16 @@ contract Administration is EIP712, Ownable{
 
     // Recording received native contributions
     function recordNativeContribution(uint eventId, uint amount, uint netId) external onlyOwner{
-        NetworkAdmin(networkAdmins[netId]).addNativeContributions(eventId, amount, feeFactor);
+        NetworkAdmin instance = NetworkAdmin(networkAdmins[netId]);
+        require(instance.receivers(eventId) != address(0));
+        instance.addNativeContributions(eventId, amount, feeFactor);
     }
 
     // Recording received native contributions
     function recordTokenContribution(uint eventId, uint amount, uint netId, address token) external onlyOwner{
-        NetworkAdmin(networkAdmins[netId]).addTokenContributions(eventId, amount, token);
+        NetworkAdmin instance = NetworkAdmin(networkAdmins[netId]);
+        require(instance.receivers(eventId) != address(0));
+        instance.addTokenContributions(eventId, amount, token);
     }
 
     // internal
