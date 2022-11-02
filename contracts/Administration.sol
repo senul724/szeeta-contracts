@@ -21,7 +21,7 @@ contract Administration is EIP712, Ownable{
 
     struct AdminCall{
         address caller;
-        uint eventId;
+        uint256 eventId;
         uint256 nonce;
     }
 
@@ -51,6 +51,7 @@ contract Administration is EIP712, Ownable{
     // Event creation
     function createEvent(address owner, ChainData[] calldata chainData) external onlyOwner returns(uint){
         // Asigning event id to a local varible to save gas
+        require(chainData.length != 0, "Chain Data Empty!");
         uint eventId = eventCounter;
         owners[eventId] = owner;
         for(uint i; i<chainData.length;){
@@ -97,7 +98,7 @@ contract Administration is EIP712, Ownable{
     }
 
     //function to transfer ownership
-    function transferOwnership(
+    function transferAuthority(
         address newOwner,
         address caller,
         uint256 eventId,
