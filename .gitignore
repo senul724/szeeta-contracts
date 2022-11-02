@@ -10,5 +10,5 @@ build/
 # Dotenv file
 .env
 
-# external scripts
-asuchi/
+# node modules
+/node_modules
