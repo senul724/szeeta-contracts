@@ -19,5 +19,17 @@
   "function renounceOwnership()",
   "function transferAuthority(address newOwner, address caller, uint256 eventId, uint256 nonce, bytes signature)",
   "function transferOwnership(address newOwner)"
+],
+  "netAbi":[
+  "constructor(uint256 netId)",
+  "function addNativeContributions(uint256 eventId, uint256 amount, uint256 feeFactor)",
+  "function addTokenContributions(uint256 eventId, uint256 amount, address token)",
+  "function admin() view returns (address)",
+  "function changeReceiver(address newReceiver, uint256 eventId)",
+  "function contributionsReceived(uint256) view returns (uint256)",
+  "function fees() view returns (uint256)",
+  "function network() view returns (uint256)",
+  "function receivers(uint256) view returns (address)",
+  "function tokenContributionsReceived(uint256, address) view returns (uint256)"
 ]
 }
