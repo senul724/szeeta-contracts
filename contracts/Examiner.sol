@@ -2,11 +2,13 @@
 pragma solidity ^0.8.7;
 
 import "./interfaces/IERC20.sol";
+import "./utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract Examiner is EIP712{
     using ECDSA for bytes32;
+    using SafeERC20 for IERC20;
     // Address of the organization
     address public org;
     // factor when calculating fees
@@ -113,7 +115,7 @@ contract Examiner is EIP712{
     )
         internal
     {
-        IERC20(token).transferFrom(from, payee, amount);
+        IERC20(token).safeTransferFrom(from, payee, amount);
     }
 
     function validateToken(
