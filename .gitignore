@@ -12,3 +12,7 @@ build/
 
 # node modules
 /node_modules
+
+# remix
+/contracts/artifacts
+/contracts/.deps
