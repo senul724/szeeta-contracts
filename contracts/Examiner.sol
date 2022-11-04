@@ -56,8 +56,8 @@ contract Examiner is EIP712{
     );
 
     constructor(uint fee, address org_) EIP712('szeeta', '0.0.1'){
-        org = org_;
         feeFactor = fee;
+        org = org_;
     }
 
     // public functions
