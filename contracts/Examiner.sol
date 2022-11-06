@@ -6,15 +6,43 @@ import "./utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
+/**
+ * @dev Examiner is a contract witch facilitate effective contribution collection
+ * with blockchain tech.
+ *
+ * Functionality of the contract is to recieve contributions, validate the transactions,
+ * deduct the fee and transfer the funds to the specific reciever
+ *
+ * The contributions are sent to an event that is created and the event id and the receiving
+ * address are sent as parameters. Also the transctions data are sucred and validated using
+ * EIP712 and replaying is avoided with time expiration
+ */
 contract Examiner is EIP712{
     using ECDSA for bytes32;
+
+    /**
+     *@dev SafeERC20 wrapper is used for ERC20 transactoion
+     */
     using SafeERC20 for IERC20;
-    // Address of the organization
+
+    /**
+     * @dev Address of the organization
+     */
     address public org;
-    // factor when calculating fees
+
+    /**
+     * @dev Method used to calculate the fee
+     * When the amount is devided by the fee factor, the quotient will be the fee.
+     * example: If the fee is 1%, feeFactor will be 100
+     */
     uint256 public feeFactor;
 
     // Structs
+
+    /**
+     * @dev used for validating data with EIP712 signature type when receiving
+     * token contributions 
+     */
     struct Token{
         uint256 eventId;
         uint256 amount;
@@ -23,13 +51,19 @@ contract Examiner is EIP712{
         uint256 time;
     }
 
+    /**
+     * @dev used for validating data with EIP712 signature type when receiving
+     * native currency contributions 
+     */
     struct Native{
         uint256 eventId;
         address receiver;
         uint256 time;
     }
 
-    // Typehash of the structs
+    /**
+     *@dev Typehash of the structs to be used in the validation process mentioned above
+     */
     bytes32 private constant tokenTypeHash =
         keccak256(
             'Token(uint256 eventId,uint256 amount,address token,address receiver,uint256 time)'
@@ -61,6 +95,21 @@ contract Examiner is EIP712{
     }
 
     // public functions
+
+    /**
+     * @dev About the recieve funcitions
+     * The receive functions are main functional components of the contract.
+     * 
+     * These functions receive contributions, validates the transaction(process is metioned below)
+     * and split the amount sending the amount to the receiver deducting the fee. 
+     *
+     * For native currency contributions, the fee is collected in contract for organization to
+     * withdraw and for ERC20 contributions the fee is transferd to the organization immediatly.
+     */
+    
+    /**
+     * @dev Functions to validate ERC20 contributions
+     */
     function receiveTokenFunds(
         uint256 eventId,
         uint256 amount, 
@@ -73,6 +122,7 @@ contract Examiner is EIP712{
         payable
     {
         require(validateToken(eventId, amount, token, receiver, time, signature));
+        // calculating the fee
         uint256 fee = amount / feeFactor;
         transferTokenFunds(amount - fee, msg.sender, receiver, token);
         transferTokenFunds(fee, msg.sender, org, token);
@@ -85,6 +135,9 @@ contract Examiner is EIP712{
         );
     }
 
+    /**
+     * @dev Functions to receive native currency contributions
+     */
     function receiveNativeFunds(uint256 eventId, address receiver, uint256 time, bytes calldata signature) external payable{
         require(validateNative(eventId, receiver, time, signature));
         uint amount = msg.value;
@@ -100,17 +153,23 @@ contract Examiner is EIP712{
 
     // internal
 
-    // Simple functions to avoid code repetition to transfer native currency
+    /**
+     * @dev Simple function for transfering native contributions.
+     * Mainly done to avoid code repetition
+     */
     function transferNativeFunds(uint256 amount, address payee) internal {
         (bool success, ) = payable(payee).call{value: amount}("");
         require(success, "Transfer Failed");
     }
 
-    // Simple functions to avoid code repetition to transfer ERC20 tokens
+    /**
+     * @dev Simple function for transfering ERC20 contributions.
+     * Mainly done to avoid code repetition
+     */
     function transferTokenFunds(
         uint256 amount,
         address from,
-        address payee,
+        address payee,u
         address token
     )
         internal
@@ -118,6 +177,23 @@ contract Examiner is EIP712{
         IERC20(token).safeTransferFrom(from, payee, amount);
     }
 
+    /**
+     * @dev About the transactions validations
+     *
+     * We use time to expire transactions other than managing a nonce.
+     * The main reason for this is the lower the gas fee of the user because it takes about
+     * 20k gas to update a bolean state of a nonce.
+     * Since are main goal is to compete with normal gas fee for a transactions (approximately 21k gas)
+     * we are using time for validation.
+     *
+     * How we do that is we take the block timestamp when the user sends out the transaction and add a
+     * reasonable time considering the average mining time of a block of the specific network and set it
+     * as the expiration time
+     */
+
+    /**
+     * @dev Functions to validate ERC20 contributions
+     */
     function validateToken(
         uint256 eventId, 
         uint256 amount, 
@@ -138,6 +214,9 @@ contract Examiner is EIP712{
         ).recover(signature);
     }
 
+    /**
+     * @dev Functions to validate native currency contributions
+     */
     function validateNative(
         uint256 eventId, 
         address receiver,
@@ -156,20 +235,32 @@ contract Examiner is EIP712{
         ).recover(signature);
     }
 
-    // All contributions are sent out of the contract instantly so that only the fee is collected in the contracts.
-    // Value to withdraw is passed as and argument and not setting the amount to be contract balance is to avoid
-    // any error due to order of execution 
+    /**
+     * @dev All contributions are sent out of the contract immediatly so that only the fee
+     * is collected in the contracts.
+     *
+     * Value to withdraw is passed as and argument and not setting the amount to be contract balance is to avoid
+     * any errors due to order of execution 
+     */
     function withdraw(uint amount, address receiver) external{
         require(msg.sender == org);
         transferNativeFunds(amount, receiver);
     }
 
+    /**
+     * @dev restricted function to change organization address
+     */
     function changeOrg(address newOrg) external {
         require(msg.sender == org);
         org = newOrg;
     }
 
     // utils
+
+    /**
+     * @dev simple function to get block timestamp.
+     * Timestamps are used to validate transactions as mentioned above 
+     */
     function getTime() external view returns(uint256){
         return block.timestamp;
     }
