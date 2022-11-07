@@ -4,7 +4,6 @@ pragma solidity ^0.8.7;
 import "./interfaces/IERC20.sol";
 import "./openzeppalin-utils/SafeERC20.sol";
 import "./openzeppalin-utils/EIP712.sol";
-import "./openzeppalin-utils/ECDSA.sol";
 
 /**
  * @dev Examiner is a contract witch facilitate effective contribution collection
