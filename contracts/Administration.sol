@@ -2,45 +2,81 @@
 pragma solidity ^0.8.7;
 
 import "./NetworkAdmin.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./openzeppalin-utils/EIP712.sol";
+import "./openzeppalin-utils/Ownable.sol";
 
+/**
+ * @dev Contract manages event information throught out all supoorted network.
+ *
+ * Contract deploys a network admin didicated to each network adn stores the network
+ * specific data on the network admin contracts.
+ *
+ * Contract also manages all the admin functions that mainly includes manipulating sensitive
+ * data of an event such as the receiing address by the user. All admin interactions require
+ * the event owner to sign required data and call the contract through the orgnaizations private
+ * key to enable gassless transactions.
+ *
+ * Contract also records all the contributions received and realted fees.
+ */
 contract Administration is EIP712, Ownable{
-    using ECDSA for bytes32;
-    // Event count
+    /**
+     * @dev Event ids are assigned by a incremented state variable. 
+     */
     uint256 public eventCounter;
-    // Fee factor
+
+    /**
+     * @dev Method used to calculate the fee
+     * When the amount is devided by the fee factor, the quotient will be the fee.
+     * example: If the fee is 1%, feeFactor will be 100.
+     */
     uint256 public feeFactor;
 
-    // Structs
+    /**
+     * @dev For getting network information required when creating an event.
+     * Contains the chain id adn the receiving address of the specific network.
+     */
     struct ChainData{
         uint256 netId;
         address receiver;
     }
 
+    /**
+     * @dev used for validating data with EIP712 signature type when receiving
+     * token contributions.
+     */
     struct AdminCall{
         address caller;
         uint256 eventId;
         uint256 nonce;
     }
 
-    // Typehash of the sigatuere structs
+    /**
+     *@dev Typehash of the structs to be used in the validation process mentioned above.
+     */
     bytes32 private constant adminTypeHash =
         keccak256(
             'AdminCall(address caller,uint256 eventId,uint256 nonce)'
         );
 
-    // Owners of an event
-    // (eventId => Owner address)
+    /**
+     * @dev Records the owners of the event.
+     */
     mapping(uint256 => address) public owners;
-    // Keeps the state of an event
-    // (eventId => state)
+
+    /**
+     * @dev Keeps in track of the closed and opened state of an event.
+     */
     mapping(uint256 => bool) public closed;
-    // Keeps in-track of the network admins
-    // (chainId => NetworkAdmin address)
+
+    /**
+     * @dev Keeps in-track of the network admins.
+     * Description available in the networkAdmin contract description.
+     */
     mapping(uint256 => address) public networkAdmins;
-    // keep intrack of the proccesed transactions
+
+    /**
+     * @dev Keeps intrack of the processed transactions.
+     */
     mapping(uint256 => bool) isExpired;
 
     constructor(uint feeFactor_) EIP712('szeeta', '0.0.1'){
@@ -48,10 +84,19 @@ contract Administration is EIP712, Ownable{
         eventCounter = 1;
     }
 
-    // Event creation
+    /**
+     * @dev Events are created by assigning an event id.
+     *
+     * @param owner Address of the event owner. Only owner can manipulate the event data by calling
+     * the contract through the organization private key.
+     * @param chainData Array of ChainData. Creator must atleast select one supported network to create an event.
+     */
     function createEvent(address owner, ChainData[] calldata chainData) external onlyOwner returns(uint){
-        // Asigning event id to a local varible to save gas
         require(chainData.length != 0, "Chain Data Empty!");
+
+        /**
+         * @dev Asigning event id to a local varible to save gas
+         */
         uint eventId = eventCounter;
         owners[eventId] = owner;
         for(uint i; i<chainData.length;){
@@ -64,9 +109,12 @@ contract Administration is EIP712, Ownable{
         eventCounter ++;
         return eventId;
     }
+
     // Functions of event administration
 
-    // To change the receiving address of an event
+    /**
+     * @dev Funtion to change the receiver of an event specific to the network.
+     */
     function changeReceiver(
         address newReceiver, 
         uint256 chainId, 
@@ -82,8 +130,11 @@ contract Administration is EIP712, Ownable{
         NetworkAdmin(networkAdmins[chainId]).changeReceiver(newReceiver, eventId);
     }
 
-    // To close an event
-    // * ONCE CLOSED AN EVENT CANNOT BE RE-OPENED
+    /**
+     * @dev Function close an event
+     *
+     * NOTE: ONCE CLOSED AN EVENT CANNOT BE RE-OPENED
+     */
     function close(
         address caller,
         uint256 eventId,
@@ -97,7 +148,9 @@ contract Administration is EIP712, Ownable{
         closed[eventId] = true;
     }
 
-    //function to transfer ownership
+    /**
+     * @dev Function to transfer ownership of an event
+     */
     function transferAuthority(
         address newOwner,
         address caller,
@@ -112,26 +165,37 @@ contract Administration is EIP712, Ownable{
         owners[eventId] = newOwner;
     }
 
-    // Changing the fee factor
+    // For organizational use
+
+    /**
+     * @dev Funtion for changing the fee factor
+     */
     function changeFeeFactor(uint newFeeFactor) external onlyOwner{
         feeFactor = newFeeFactor;
     }
 
-    // Adding new network support
+    /**
+     * @dev Adding new network support by deploying a network admin specific to the 
+     * new network intended to supoort.
+     */
     function addNetwork(uint netId) external onlyOwner{
         require(networkAdmins[netId] == address(0), "Network already initialized!");
         NetworkAdmin newNetwork = new NetworkAdmin(netId);
         networkAdmins[netId] = address(newNetwork);
     }
 
-    // Recording received native contributions
+    /**
+     * @dev Recording received native contributions.
+     */
     function recordNativeContribution(uint eventId, uint amount, uint netId) external onlyOwner{
         NetworkAdmin instance = NetworkAdmin(networkAdmins[netId]);
         require(instance.receivers(eventId) != address(0));
         instance.addNativeContributions(eventId, amount, feeFactor);
     }
 
-    // Recording received native contributions
+    /**
+     * @dev Recording received native contributions.
+     */
     function recordTokenContribution(uint eventId, uint amount, uint netId, address token) external onlyOwner{
         NetworkAdmin instance = NetworkAdmin(networkAdmins[netId]);
         require(instance.receivers(eventId) != address(0));
@@ -139,15 +203,20 @@ contract Administration is EIP712, Ownable{
     }
 
     // internal
+
+    /**
+     * @dev Function to validate data sent for admin iteractions for event data manipulation.
+     */
     function authorizedAndOpen(address caller, uint eventId, uint256 nonce, bytes calldata signature) internal{
         require(!closed[eventId] ,"Event closed!");
         require(owners[eventId] == caller,"Unauthorized Call!");
         require(!isExpired[nonce], "Transaction Expired!");
-        address caller_ = _hashTypedDataV4(
+        bytes32 typedDataHash = _hashTypedDataV4(
             keccak256(
                 abi.encode(adminTypeHash, caller, eventId, nonce)
             )
-        ).recover(signature);
+        );
+        address caller_ = ECDSA.recover(typedDataHash, signature);
         require(caller == caller_, "Fake Signature!");
 
         isExpired[nonce] = true;

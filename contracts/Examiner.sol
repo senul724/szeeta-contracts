@@ -2,46 +2,45 @@
 pragma solidity ^0.8.7;
 
 import "./interfaces/IERC20.sol";
-import "./utils/SafeERC20.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
-import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "./openzeppalin-utils/SafeERC20.sol";
+import "./openzeppalin-utils/EIP712.sol";
+import "./openzeppalin-utils/ECDSA.sol";
 
 /**
  * @dev Examiner is a contract witch facilitate effective contribution collection
  * with blockchain tech.
  *
  * Functionality of the contract is to recieve contributions, validate the transactions,
- * deduct the fee and transfer the funds to the specific reciever
+ * deduct the fee and transfer the funds to the specific reciever.
  *
  * The contributions are sent to an event that is created and the event id and the receiving
- * address are sent as parameters. Also the transctions data are sucred and validated using
- * EIP712 and replaying is avoided with time expiration
+ * address are sent as arguments. Also the transctions data are sucred and validated using
+ * EIP712 and replaying is avoided with time expiration.
  */
 contract Examiner is EIP712{
-    using ECDSA for bytes32;
-
     /**
-     *@dev SafeERC20 wrapper is used for ERC20 transactoion
+     *@dev SafeERC20 wrapper is used for ERC20 transactions.
      */
     using SafeERC20 for IERC20;
 
     /**
-     * @dev Address of the organization
+     * @dev Address of the organization.
      */
     address public org;
 
     /**
      * @dev Method used to calculate the fee
+     *
      * When the amount is devided by the fee factor, the quotient will be the fee.
-     * example: If the fee is 1%, feeFactor will be 100
+     * example: If the fee is 1%, feeFactor will be 100.
      */
     uint256 public feeFactor;
 
     // Structs
 
     /**
-     * @dev used for validating data with EIP712 signature type when receiving
-     * token contributions 
+     * @dev Used for validating data with EIP712 signature type when receiving
+     * token contributions. 
      */
     struct Token{
         uint256 eventId;
@@ -52,8 +51,8 @@ contract Examiner is EIP712{
     }
 
     /**
-     * @dev used for validating data with EIP712 signature type when receiving
-     * native currency contributions 
+     * @dev Used for validating data with EIP712 signature type when receiving
+     * native currency contributions. 
      */
     struct Native{
         uint256 eventId;
@@ -62,7 +61,7 @@ contract Examiner is EIP712{
     }
 
     /**
-     *@dev Typehash of the structs to be used in the validation process mentioned above
+     *@dev Typehash of the structs to be used in the validation process mentioned above.
      */
     bytes32 private constant tokenTypeHash =
         keccak256(
@@ -98,6 +97,7 @@ contract Examiner is EIP712{
 
     /**
      * @dev About the recieve funcitions
+     *
      * The receive functions are main functional components of the contract.
      * 
      * These functions receive contributions, validates the transaction(process is metioned below)
@@ -108,7 +108,7 @@ contract Examiner is EIP712{
      */
     
     /**
-     * @dev Functions to validate ERC20 contributions
+     * @dev Functions to validate ERC20 contributions.
      */
     function receiveTokenFunds(
         uint256 eventId,
@@ -136,7 +136,7 @@ contract Examiner is EIP712{
     }
 
     /**
-     * @dev Functions to receive native currency contributions
+     * @dev Functions to receive native currency contributions.
      */
     function receiveNativeFunds(uint256 eventId, address receiver, uint256 time, bytes calldata signature) external payable{
         require(validateNative(eventId, receiver, time, signature));
@@ -155,7 +155,7 @@ contract Examiner is EIP712{
 
     /**
      * @dev Simple function for transfering native contributions.
-     * Mainly done to avoid code repetition
+     * Mainly done to avoid code repetition.
      */
     function transferNativeFunds(uint256 amount, address payee) internal {
         (bool success, ) = payable(payee).call{value: amount}("");
@@ -164,12 +164,12 @@ contract Examiner is EIP712{
 
     /**
      * @dev Simple function for transfering ERC20 contributions.
-     * Mainly done to avoid code repetition
+     * Mainly done to avoid code repetition.
      */
     function transferTokenFunds(
         uint256 amount,
         address from,
-        address payee,u
+        address payee,
         address token
     )
         internal
@@ -188,11 +188,11 @@ contract Examiner is EIP712{
      *
      * How we do that is we take the block timestamp when the user sends out the transaction and add a
      * reasonable time considering the average mining time of a block of the specific network and set it
-     * as the expiration time
+     * as the expiration time.
      */
 
     /**
-     * @dev Functions to validate ERC20 contributions
+     * @dev Functions to validate ERC20 contributions.
      */
     function validateToken(
         uint256 eventId, 
@@ -207,15 +207,16 @@ contract Examiner is EIP712{
         returns(bool)
     {
         require(block.timestamp < time, "Transaction expired");
-        return org == _hashTypedDataV4(
+        bytes32 typedDataHash = _hashTypedDataV4(
             keccak256(
                 abi.encode(tokenTypeHash, eventId, amount, token, receiver, time)
             )
-        ).recover(signature);
+        );
+        return org == ECDSA.recover(typedDataHash, signature);
     }
 
     /**
-     * @dev Functions to validate native currency contributions
+     * @dev Functions to validate native currency contributions.
      */
     function validateNative(
         uint256 eventId, 
@@ -228,12 +229,15 @@ contract Examiner is EIP712{
         returns(bool)
     {
         require(block.timestamp < time, "Transaction expired");
-        return org == _hashTypedDataV4(
+        bytes32 typedDataHash = _hashTypedDataV4(
             keccak256(
                 abi.encode(nativeTypeHash, eventId, receiver, time)
             )
-        ).recover(signature);
+        );
+        return org == ECDSA.recover(typedDataHash, signature);
     }
+
+    // For organizational use
 
     /**
      * @dev All contributions are sent out of the contract immediatly so that only the fee
