@@ -77,7 +77,7 @@ contract Administration is EIP712, Ownable{
     /**
      * @dev Keeps intrack of the processed transactions.
      */
-    mapping(uint256 => bool) isExpired;
+    mapping(uint256 => bool) private isExpired;
 
     constructor(uint feeFactor_) EIP712('szeeta', '0.0.1'){
         feeFactor = feeFactor_;
