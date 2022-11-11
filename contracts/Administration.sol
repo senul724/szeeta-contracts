@@ -250,6 +250,7 @@ contract Administration is EIP712, Ownable{
         onlyOwner
         returns(address)
     {
+        require(customCollections[eventId] == address(0), "Collection Already Created!");
         // deploying the new NFT collection
         RewardNFT instance = new RewardNFT(
             eventOwner,
@@ -270,7 +271,7 @@ contract Administration is EIP712, Ownable{
         ISzeetaEventRewards(publicCollectionAddress).addEventUri(eventId, metadataUri);
     }
 
-    /**
+    /**DeclarationError: Identifier already declared.
      * @dev Function to mint an NFT on be-half of the contributor from the dedicated collection
      * for the event.
      */
