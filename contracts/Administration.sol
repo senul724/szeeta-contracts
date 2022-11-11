@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
+import "@openzeppelin/contracts/access/Ownable.sol";
 import "./NetworkAdmin.sol";
 import "./openzeppalin-utils/EIP712.sol";
-import "./openzeppalin-utils/Ownable.sol";
 import "./interfaces/IRewardNFT.sol";
+import "./interfaces/ISzeetaEventRewards.sol";
+import "./nfts/RewardNFT.sol";
 
 /**
  * @dev Contract manages event information throught out all supoorted network.
@@ -13,11 +15,14 @@ import "./interfaces/IRewardNFT.sol";
  * specific data on the network admin contracts.
  *
  * Contract also manages all the admin functions that mainly includes manipulating sensitive
- * data of an event such as the receiing address by the user. All admin interactions require
+ * data of an event such as the receiving address by the user. All admin interactions require
  * the event owner to sign required data and call the contract through the orgnaizations private
  * key to enable gassless transactions.
  *
  * Contract also records all the contributions received and realted fees.
+ *
+ * Last and the main functionality of the contract is handling NFT rewards that includes intiating
+ * new instances, minting and managing ownership through out the lifetime of the event.
  */
 contract Administration is EIP712, Ownable{
     /**
@@ -31,6 +36,11 @@ contract Administration is EIP712, Ownable{
      * example: If the fee is 1%, feeFactor will be 100.
      */
     uint256 public feeFactor;
+
+    /**
+     * @dev Address of the public NFT collection for event Rewards.
+     */
+    address public publicCollectionAddress;
 
     /**
      * @dev For getting network information required when creating an event.
@@ -74,6 +84,12 @@ contract Administration is EIP712, Ownable{
      * Description available in the networkAdmin contract description.
      */
     mapping(uint256 => address) public networkAdmins;
+
+    /**
+     * @dev Keeps in-track of the custom NFT contracts created by the events
+     * for rewards.
+     */
+    mapping(uint256 => address) public customCollections;
 
     /**
      * @dev Keeps intrack of the processed transactions.
@@ -211,7 +227,64 @@ contract Administration is EIP712, Ownable{
         instance.addTokenContributions(eventId, amount, token);
     }
 
-    // internal
+    // NFT interaction
+
+    /**
+     * @dev Function to add the public NFT collection address after minting the contract
+     */
+    function AddpublicCollectionAddress(address collectionAddress) external onlyOwner{
+        publicCollectionAddress = collectionAddress;
+    }
+
+    /**
+     * @dev Function mints a new custom NFT collection for event rewards.
+     */
+    function createCustomCollection(
+        address eventOwner,
+        uint256 eventId,
+        string memory name, 
+        string memory symbol,
+        string memory uri
+    ) 
+        external
+        onlyOwner
+        returns(address)
+    {
+        // deploying the new NFT collection
+        RewardNFT instance = new RewardNFT(
+            eventOwner,
+            address(this),
+            name, 
+            symbol, 
+            uri
+        );
+        address contractAddress = address(instance);
+        customCollections[eventId] = contractAddress;
+        return contractAddress;
+    }
+
+    /**
+     * @dev Funtion initiate event rewards in the public collection.
+     */
+    function joinPublicCollection(uint eventId, string memory metadataUri) external onlyOwner{
+        ISzeetaEventRewards(publicCollectionAddress).addEventUri(eventId, metadataUri);
+    }
+
+    /**
+     * @dev Function to mint an NFT on be-half of the contributor from the dedicated collection
+     * for the event.
+     */
+    function mintCustom(address contributor, uint256 eventId) external onlyOwner{
+        IRewardNFT(customCollections[eventId]).mint(contributor);
+    }
+
+    /**
+     * @dev Funtion to mint an NFT on be-half of the contributor from the public collection
+     * for event rewards.
+     */
+    function mintPublic(address contributor, uint256 eventId) external onlyOwner{
+        ISzeetaEventRewards(publicCollectionAddress).mint(contributor, eventId);
+    }
 
     /**
      * @dev Function to validate data sent for admin iteractions for event data manipulation.
