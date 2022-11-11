@@ -4,6 +4,7 @@ pragma solidity ^0.8.7;
 import "./NetworkAdmin.sol";
 import "./openzeppalin-utils/EIP712.sol";
 import "./openzeppalin-utils/Ownable.sol";
+import "./interfaces/IRewardNFT.sol";
 
 /**
  * @dev Contract manages event information throught out all supoorted network.
@@ -139,12 +140,16 @@ contract Administration is EIP712, Ownable{
         address caller,
         uint256 eventId,
         uint256 nonce,
-        bytes calldata signature
+        bytes calldata signature,
+        address nftContract
     )
         external
         onlyOwner
     {   
         authorizedAndOpen(caller, eventId, nonce, signature);
+        if(nftContract != address(0)){
+            IRewardNFT(nftContract).close();
+        }
         closed[eventId] = true;
     }
 
@@ -156,12 +161,16 @@ contract Administration is EIP712, Ownable{
         address caller,
         uint256 eventId,
         uint256 nonce,
-        bytes calldata signature
+        bytes calldata signature,
+        address nftContract
     )
         external
         onlyOwner
     {
         authorizedAndOpen(caller, eventId, nonce, signature);
+        if(nftContract != address(0)){
+            IRewardNFT(nftContract).transferOwnership(newOwner);
+        }
         owners[eventId] = newOwner;
     }
 
