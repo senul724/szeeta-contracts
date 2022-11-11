@@ -1,0 +1,16 @@
+{
+  "collection name": "Szeeta Milestone Rewards",
+  "name": "Bronze Reward",
+  "image": "ipfs://Qmap9hfZYD8J4WuzyPvHjQGLo5rzCTs5uSvPEDscLB7dwF",
+  "description": "for contributing over 500$ through Szeeta",
+  "attributes": [
+    {
+      "trait_type": "Medal",
+      "value": "Bronze"
+    },
+    {
+      "trait_type": "Milestone",
+      "value": "500$"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "collection name": "Szeeta Milestone Rewards",
+  "name": "Silver Reward",
+  "image": "ipfs://QmWsfUBZEfkhwcBGPAZmZvz9oaR5uy1JD6FRv9QzgqZbub",
+  "description": "for contributing over 1000$ through Szeeta",
+  "attributes": [
+    {
+      "trait_type": "Medal",
+      "value": "Silver"
+    },
+    {
+      "trait_type": "Milestone",
+      "value": "1000$"
+    }
+  ]
+}

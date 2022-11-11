@@ -1,0 +1,16 @@
+{
+  "collection name": "Szeeta Milestone Rewards",
+  "name": "Diamond Reward",
+  "image": "ipfs://QmQ9Bo8NNdpdGTBrEwVPPwWjnmEzqsHfdj9Rj8vbogfxjV",
+  "description": "for contributing over 10000$ through Szeeta",
+  "attributes": [
+    {
+      "trait_type": "Medal",
+      "value": "Diamond"
+    },
+    {
+      "trait_type": "Milestone",
+      "value": "10000$"
+    }
+  ]
+}

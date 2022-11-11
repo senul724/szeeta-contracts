@@ -1,0 +1,16 @@
+{
+  "collection name": "Szeeta Milestone Rewards",
+  "name": "Blue Reward",
+  "image": "ipfs://QmfJp5L6NGtgH1UtQwnNP5JmwrTZuRKp1vxi1q6AkvBt6t",
+  "description": "for contributing over 100$ through Szeeta",
+  "attributes": [
+    {
+      "trait_type": "Medal",
+      "value": "Blue"
+    },
+    {
+      "trait_type": "Milestone",
+      "value": "100$"
+    }
+  ]
+}
