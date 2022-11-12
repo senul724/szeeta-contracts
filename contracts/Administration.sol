@@ -201,13 +201,13 @@ contract Administration is EIP712{
         address caller,
         uint256 eventId,
         uint256 nonce,
-        bytes calldata signature,
-        address nftContract
+        bytes calldata signature
     )
         external
         onlyOrg
     {
         authorizedAndOpen(caller, eventId, nonce, signature);
+        address nftContract = customCollections[eventId];
         if(nftContract != address(0)){
             IRewardNFT(nftContract).transferOwnership(newOwner);
         }
