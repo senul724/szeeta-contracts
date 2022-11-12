@@ -12,9 +12,12 @@ import "./openzeppalin-utils/EIP712.sol";
  * Functionality of the contract is to recieve contributions, validate the transactions,
  * deduct the fee and transfer the funds to the specific reciever.
  *
- * The contributions are sent to an event that is created and the event id and the receiving
- * address are sent as arguments. Also the transctions data are sucred and validated using
- * EIP712 and replaying is avoided with time expiration.
+ * The contributions are sent to an event's receiving address where the event id and the 
+ * receiving address are sent as arguments. Also the transaction data is sucured and 
+ * validated using EIP712 and replaying is avoided with time expiration.
+ *
+ * Contributions are accepted through native currency of the network and ERC20 tokens
+ * allowed by the ornaization.
  */
 contract Examiner is EIP712{
     /**
@@ -104,6 +107,9 @@ contract Examiner is EIP712{
      *
      * For native currency contributions, the fee is collected in contract for organization to
      * withdraw and for ERC20 contributions the fee is transferd to the organization immediatly.
+     *
+     * About ERC20 tokens, a list of popular tokena are seleceted by the organization and allowed.
+     * Also we allow users to suggest token to allow.
      */
     
     /**
