@@ -247,7 +247,7 @@ contract Administration is EIP712{
     /**
      * @dev Function to add the public NFT collection address after minting the contract
      */
-    function AddpublicCollectionAddress(address collectionAddress) external onlyHandler{
+    function addPublicCollectionAddress(address collectionAddress) external onlyHandler{
         publicCollectionAddress = collectionAddress;
     }
 
