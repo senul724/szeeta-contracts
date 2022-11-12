@@ -11,7 +11,7 @@ contract ExaminerTest is Test {
     address realCaller = 0x15Cf49f835C5545810a2CCd4c8F71B17dc16aE22;
 
     function setUp() public {
-       examiner = new Examiner(2, realCaller);
+       examiner = new Examiner(2, realCaller, realCaller);
     }
 
     function testOwnership() external {
