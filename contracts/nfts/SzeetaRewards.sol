@@ -2,8 +2,6 @@
 pragma solidity ^0.8.16;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
 
 /**
  * @dev Contract is used to reward Szeeta ccntributors for achieving certain milestones.
@@ -16,8 +14,21 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  *
  * And also, no modifications are allowed after the stable release. Only adding new milestones
  * are allowed.
+ *
+ * About athourity, org can mint and handler can modify state variable. Authourity is split for
+ * security reasons.
  */
-contract SzeetaRewards is ERC721, Ownable{
+contract SzeetaRewards is ERC721{
+    /**
+     * @dev Address of the organization.
+     */
+    address public org;
+
+    /**
+     * @dev Address of the handler.
+     */
+    address public handler;
+
     /**
      * @dev Numerical incrementer is used to assign token ids.
      */
@@ -38,16 +49,19 @@ contract SzeetaRewards is ERC721, Ownable{
      */
     mapping (uint256 => string) public metadata;
 
-    constructor(address org)ERC721("Szeeta Rewards", "SZEETA"){
+    constructor(address org_, address handler_)ERC721("Szeeta Rewards", "SZEETA"){
         /**
          * @dev Token counter is incremented after assigning id. Therefore initial value
          * is 1.
          */
         tokenCounter = 1;
-        transferOwnership(org);
+        org = org_;
+        handler = handler_;
     }
 
-    function mint(address contributor, uint256 milestoneId) external onlyOwner returns(uint256){
+    function mint(address contributor, uint256 milestoneId) external returns(uint256){
+        require(msg.sender == org, "Unauthorized Call!");
+
         /**
          * @dev Usable id is assigned to a local state variable to save gas.
          */
@@ -65,7 +79,9 @@ contract SzeetaRewards is ERC721, Ownable{
     /**
      * @dev Restricted function to assing milestone metadata URIs.
      */
-    function assignMetadata(uint256 id, string memory value) external onlyOwner{
+    function assignMetadata(uint256 id, string memory value) external{
+        require(msg.sender == handler, "Unauthorized Call!");
+
         /**
          * @dev Statement to avoid reassigning milestone URIs after stable release.
          */
@@ -77,9 +93,9 @@ contract SzeetaRewards is ERC721, Ownable{
      * @dev Restricted function to relase stable version.
      * This state is only changable once.
      */
-    function releaseStable() external onlyOwner{
-      require(!isStable, "Already realeased!");
-      isStable = true;
+    function releaseStable() external{
+        require(!isStable && msg.sender == handler, "Invalid Call!");
+        isStable = true;
     }
 
     function tokenURI(uint256 tokenId) public view virtual override returns (string memory){
