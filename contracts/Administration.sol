@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.7;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./NetworkAdmin.sol";
 import "./openzeppalin-utils/EIP712.sol";
 import "./interfaces/IRewardNFT.sol";
@@ -23,8 +22,20 @@ import "./nfts/RewardNFT.sol";
  *
  * Last and the main functionality of the contract is handling NFT rewards that includes intiating
  * new instances, minting and managing ownership through out the lifetime of the event.
+ *
+ * All the mutations restricted for the Creator is done by the handler.
  */
-contract Administration is EIP712, Ownable{
+contract Administration is EIP712{
+    /**
+     * @dev Address of the oragainzation.
+     */
+     address public org;
+
+    /**
+     * @dev Address of the handler.
+     */
+     address private handler;
+
     /**
      * @dev Event ids are assigned by a incremented state variable. 
      */
@@ -96,8 +107,21 @@ contract Administration is EIP712, Ownable{
      */
     mapping(uint256 => bool) private isExpired;
 
-    constructor(uint feeFactor_) EIP712('szeeta', '0.0.1'){
+    // modifiers
+    modifier onlyOrg(){
+      require(msg.sender == org, "Unauthorized call!");
+      _;
+    }
+
+    modifier onlyHandler(){
+      require(msg.sender == handler, "Unauthorized call!");
+      _;
+    }
+
+    constructor(uint feeFactor_, address org_, address handler_) EIP712('szeeta', '0.0.1'){
         feeFactor = feeFactor_;
+        org = org_;
+        handler= handler_;
         eventCounter = 1;
     }
 
@@ -108,7 +132,7 @@ contract Administration is EIP712, Ownable{
      * the contract through the organization private key.
      * @param chainData Array of ChainData. Creator must atleast select one supported network to create an event.
      */
-    function createEvent(address owner, ChainData[] calldata chainData) external onlyOwner returns(uint){
+    function createEvent(address owner, ChainData[] calldata chainData) external onlyOrg returns(uint){
         require(chainData.length != 0, "Chain Data Empty!");
 
         /**
@@ -141,7 +165,7 @@ contract Administration is EIP712, Ownable{
         bytes calldata signature
     ) 
         external 
-        onlyOwner
+        onlyOrg
     {
         authorizedAndOpen(caller, eventId, nonce, signature);
         NetworkAdmin(networkAdmins[chainId]).changeReceiver(newReceiver, eventId);
@@ -160,7 +184,7 @@ contract Administration is EIP712, Ownable{
         address nftContract
     )
         external
-        onlyOwner
+        onlyOrg
     {   
         authorizedAndOpen(caller, eventId, nonce, signature);
         if(nftContract != address(0)){
@@ -181,7 +205,7 @@ contract Administration is EIP712, Ownable{
         address nftContract
     )
         external
-        onlyOwner
+        onlyOrg
     {
         authorizedAndOpen(caller, eventId, nonce, signature);
         if(nftContract != address(0)){
@@ -190,20 +214,11 @@ contract Administration is EIP712, Ownable{
         owners[eventId] = newOwner;
     }
 
-    // For organizational use
-
-    /**
-     * @dev Funtion for changing the fee factor
-     */
-    function changeFeeFactor(uint newFeeFactor) external onlyOwner{
-        feeFactor = newFeeFactor;
-    }
-
     /**
      * @dev Adding new network support by deploying a network admin specific to the 
      * new network intended to supoort.
      */
-    function addNetwork(uint netId) external onlyOwner{
+    function addNetwork(uint netId) external onlyHandler{
         require(networkAdmins[netId] == address(0), "Network already initialized!");
         NetworkAdmin newNetwork = new NetworkAdmin(netId);
         networkAdmins[netId] = address(newNetwork);
@@ -212,7 +227,7 @@ contract Administration is EIP712, Ownable{
     /**
      * @dev Recording received native contributions.
      */
-    function recordNativeContribution(uint eventId, uint amount, uint netId) external onlyOwner{
+    function recordNativeContribution(uint eventId, uint amount, uint netId) external onlyOrg{
         NetworkAdmin instance = NetworkAdmin(networkAdmins[netId]);
         require(instance.receivers(eventId) != address(0));
         instance.addNativeContributions(eventId, amount, feeFactor);
@@ -221,7 +236,7 @@ contract Administration is EIP712, Ownable{
     /**
      * @dev Recording received native contributions.
      */
-    function recordTokenContribution(uint eventId, uint amount, uint netId, address token) external onlyOwner{
+    function recordTokenContribution(uint eventId, uint amount, uint netId, address token) external onlyOrg{
         NetworkAdmin instance = NetworkAdmin(networkAdmins[netId]);
         require(instance.receivers(eventId) != address(0));
         instance.addTokenContributions(eventId, amount, token);
@@ -232,7 +247,7 @@ contract Administration is EIP712, Ownable{
     /**
      * @dev Function to add the public NFT collection address after minting the contract
      */
-    function AddpublicCollectionAddress(address collectionAddress) external onlyOwner{
+    function AddpublicCollectionAddress(address collectionAddress) external onlyHandler{
         publicCollectionAddress = collectionAddress;
     }
 
@@ -247,7 +262,7 @@ contract Administration is EIP712, Ownable{
         string memory uri
     ) 
         external
-        onlyOwner
+        onlyOrg
         returns(address)
     {
         require(customCollections[eventId] == address(0), "Collection Already Created!");
@@ -267,7 +282,7 @@ contract Administration is EIP712, Ownable{
     /**
      * @dev Funtion initiate event rewards in the public collection.
      */
-    function joinPublicCollection(uint eventId, string memory metadataUri) external onlyOwner{
+    function joinPublicCollection(uint eventId, string memory metadataUri) external onlyOrg{
         ISzeetaEventRewards(publicCollectionAddress).addEventUri(eventId, metadataUri);
     }
 
@@ -275,7 +290,7 @@ contract Administration is EIP712, Ownable{
      * @dev Function to mint an NFT on be-half of the contributor from the dedicated collection
      * for the event.
      */
-    function mintCustom(address contributor, uint256 eventId) external onlyOwner{
+    function mintCustom(address contributor, uint256 eventId) external onlyOrg{
         IRewardNFT(customCollections[eventId]).mint(contributor);
     }
 
@@ -283,7 +298,7 @@ contract Administration is EIP712, Ownable{
      * @dev Funtion to mint an NFT on be-half of the contributor from the public collection
      * for event rewards.
      */
-    function mintPublic(address contributor, uint256 eventId) external onlyOwner{
+    function mintPublic(address contributor, uint256 eventId) external onlyOrg{
         ISzeetaEventRewards(publicCollectionAddress).mint(contributor, eventId);
     }
 
@@ -303,5 +318,28 @@ contract Administration is EIP712, Ownable{
         require(caller == caller_, "Fake Signature!");
 
         isExpired[nonce] = true;
+    }
+
+    // For organizational use
+
+    /**
+     * @dev restricted function to change organization address.
+     */
+    function changeOrg(address newOrg) external onlyHandler{
+        org = newOrg;
+    }
+
+    /**
+     * @dev restricted function to change handler address.
+     */
+    function changeHandler(address newHandler) external onlyHandler{
+        handler = newHandler;
+    }
+
+    /**
+     * @dev Funtion for changing the fee factor.
+     */
+    function changeFeeFactor(uint newFeeFactor) external onlyHandler{
+        feeFactor = newFeeFactor;
     }
 }
