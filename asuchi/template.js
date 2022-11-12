@@ -9,17 +9,3 @@ const pvt = "c7c880a37ebc1713391673184f13a89158c5ddca9a72538a1d632fd2878e2f5b"
 const provider = new ethers.providers.JsonRpcProvider(mumbai_rpc)
 const signer = new ethers.Wallet(pvt, provider)
 const contract = new ethers.Contract(admin_address, abi, signer);
-
-const run = async()=>{
-  const bsc_admin = await contract.callStatic.networkAdmins(80001);
-  const netAdminContract = new ethers.Contract(bsc_admin, netAbi, signer);
-  const receiver = await netAdminContract.callStatic.receivers(1);
-  console.log(`admin:${bsc_admin} \n receiver:${receiver}\n\n`);
-}
-
-const run2 = async()=>{
-  const owner = await contract.callStatic.closed(1);
-  console.log(owner)
-}
-
-run2()
