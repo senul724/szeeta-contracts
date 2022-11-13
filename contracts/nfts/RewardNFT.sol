@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.16;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
 /**
  * @dev Contract is for Szeeta event creators to reward their contributors for
  * acheiving certain milestones.
@@ -23,7 +24,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * contract. After the event is closed, authority for transfering and renouncing ownership is given back
  * to the owner.
  */
-contract RewardNFT is ERC721, Ownable{
+contract RewardNFT is Initializable, ERC721Upgradeable{
+    /**
+     * @dev Address of the event creator.
+     */
+     address private _owner;
+
     /**
      * @dev Address of the administration contract. Only administration contract can manage
      * ownership and mint nfts on behalf of the eligible contributors. Manipulating sensitive
@@ -49,18 +55,24 @@ contract RewardNFT is ERC721, Ownable{
     string private metadataURI;
 
     modifier onlyAdmin(){
-        require(administration == _msgSender() && !isClosed, "Invalid Caller!");
+        require(administration == msg.sender && !isClosed, "Invalid Caller!");
         _;
     }
 
-    constructor(
+    modifier onlyOwner(){
+        require(_owner == msg.sender, "Invalid Caller!");
+        _;
+    }
+
+    function initialize(
        address eventOwner,
        address admin,
        string memory name, 
        string memory symbol, 
        string memory uri
     )
-        ERC721(name, symbol)
+       public
+       initializer
     {
         administration = admin;
         metadataURI = uri;
@@ -69,7 +81,12 @@ contract RewardNFT is ERC721, Ownable{
          * @dev Ownership is transfered eventhough their are no access point for owner is to
          * prove the ownership.
          */
-        transferOwnership(eventOwner);
+        _owner = eventOwner;
+        
+        /**
+         * @dev Initiate the NFT instance.
+         */
+         __ERC721_init(name, symbol);
 
         /**
          * @dev First toke will be transfered to the owner of the event.
@@ -108,24 +125,29 @@ contract RewardNFT is ERC721, Ownable{
         return metadataURI;
     }
 
-    // Ownable contract overrides
+    /**
+     * @dev Returns the address of the current owner.
+     */
+    function owner() public view returns (address) {
+        return _owner;
+    }
 
     /**
      * @dev Event creators will not get to transfer ownership while the page is ative.
      * The organization will get to transfer ownership to the new owner when the current
      * user transfer ownership of the event.
      */
-    function transferOwnership(address newOwner) public override{
+    function transferOwnership(address newOwner) public {
         require(newOwner != address(0), "Ownable: new owner is the zero address");
-        require( (isClosed && _msgSender() == owner()) || (!isClosed && _msgSender() == administration) , "Unathourized Caller!");
-        _transferOwnership(newOwner);
+        require( (isClosed && msg.sender == owner()) || (!isClosed && msg.sender == administration) , "Unathourized Caller!");
+        _owner = newOwner;
     }
 
     /**
      * @dev Event creators will not get to renounce their ownership while the page is ative
      */
-    function renounceOwnership() public override onlyOwner {
+    function renounceOwnership() public onlyOwner {
         require(isClosed, "Cannot Renounce Ownership, Event Still Open!");
-        _transferOwnership(address(0));
+        _owner = address(0);
     }
 }
