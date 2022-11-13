@@ -3,5 +3,8 @@ src = 'contracts'
 out = 'build'
 libs = ['lib']
 
-remappings = ['@openzeppelin/=lib/openzeppelin-contracts/']
+remappings = [
+  '@openzeppelin/contracts=lib/openzeppelin-contracts/contracts',
+  '@openzeppelin/contracts-upgradeable=lib/openzeppelin-contracts-upgradeable/contracts',
+]
 # See more config options https://github.com/foundry-rs/foundry/tree/master/config
