@@ -42,11 +42,6 @@ contract Administration is EIP712{
     address private governer;
 
     /**
-     * @dev Base contract address of the custome NFT collection.
-     */
-    address private base;
-
-    /**
      * @dev Event ids are assigned by a incremented state variable. 
      */
     uint256 public eventCounter;
@@ -128,11 +123,10 @@ contract Administration is EIP712{
       _;
     }
 
-    constructor(uint feeFactor_, address org_, address governer_, address base_) EIP712('szeeta', '0.0.1'){
+    constructor(uint feeFactor_, address org_, address governer_) EIP712('szeeta', '0.0.1'){
         feeFactor = feeFactor_;
         org = org_;
         governer = governer_;
-        base = base_;
         eventCounter = 1;
     }
 
