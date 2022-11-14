@@ -4,22 +4,8 @@ pragma solidity ^0.8.7;
 import "./IRewardNFTV2.sol";
 
 /**
- * @dev Contract manages event information throught out all supoorted network.
- *
- * Contract deploys a network admin didicated to each network adn stores the network
- * specific data on the network admin contracts.
- *
- * Contract also manages all the admin functions that mainly includes manipulating sensitive
- * data of an event such as the receiving address by the user. All admin interactions require
- * the event owner to sign required data and call the contract through the orgnaizations private
- * key to enable gassless transactions.
- *
- * Contract also records all the contributions received and realted fees.
- *
- * Last and the main functionality of the contract is handling NFT rewards that includes intiating
- * new instances, minting and managing ownership through out the lifetime of the event.
- *
- * All the mutations restricted for the Creator is done by the handler.
+ * @dev Contract mints custom collections and only callable by the Administrator.
+ * Factory v2 uses minimal proxy (EIP1167) for cheap delpoyement.
  */
 contract Factory{
     /**
