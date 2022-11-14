@@ -5,7 +5,7 @@ import "./NetworkAdmin.sol";
 import "./openzeppalin-utils/EIP712.sol";
 import "./interfaces/IRewardNFT.sol";
 import "./interfaces/ISzeetaEventRewards.sol";
-import "./nfts/RewardNFT.sol";
+import "./interfaces/IFactory.sol";
 
 /**
  * @dev Contract manages event information throught out all supoorted network.
@@ -30,6 +30,11 @@ contract Administration is EIP712{
      * @dev Address of the oragainzation.
      */
     address public org;
+
+    /** 
+     * @dev Address of the Custom NFT Factory.
+     */
+    address public factory;
 
     /**
      * @dev Address of the handler.
@@ -251,10 +256,17 @@ contract Administration is EIP712{
     // NFT interaction
 
     /**
-     * @dev Function to add the public NFT collection address after minting the contract
+     * @dev Function to add the public NFT collection address after minting the contract.
      */
     function addPublicCollectionAddress(address collectionAddress) external onlyHandler{
         publicCollectionAddress = collectionAddress;
+    }
+
+    /**
+     * @dev Function to add the custom NFT factory address.
+     */
+    function addCollectionFactory(address factoryAddress) external onlyHandler{
+        factory = factoryAddress;
     }
 
     /**
@@ -273,8 +285,7 @@ contract Administration is EIP712{
     {
         require(customCollections[eventId] == address(0), "Collection Already Created!");
         // deploying the new NFT collection
-        address contractAddress = clone(base);
-        RewardNFT(contractAddress).initialize(eventOwner, address(this), name, symbol, uri);
+        address contractAddress =  IFactory(factory).mintCollection(eventOwner, name, symbol, uri);
         customCollections[eventId] = contractAddress;
         return contractAddress;
     }
@@ -318,19 +329,6 @@ contract Administration is EIP712{
         require(caller == caller_, "Fake Signature!");
 
         isExpired[nonce] = true;
-    }
-
-    function clone(address base_) internal returns (address instance) {
-        
-        assembly {
-            // Cleans the upper 96 bits of the `implementation` word, then packs the first 3 bytes
-            // of the `implementation` address with the bytecode before the address.
-            mstore(0x00, or(shr(0xe8, shl(0x60, base_)), 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000))
-            // Packs the remaining 17 bytes of `implementation` with the bytecode after the address.
-            mstore(0x20, or(shl(0x78, base_), 0x5af43d82803e903d91602b57fd5bf3))
-            instance := create(0, 0x09, 0x37)
-        }
-        require(instance != address(0), "ERC1167: create failed");
     }
 
     // For organizational use
