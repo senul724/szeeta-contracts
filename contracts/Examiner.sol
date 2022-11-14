@@ -19,7 +19,7 @@ import "./openzeppalin-utils/EIP712.sol";
  * Contributions are accepted through native currency of the network and ERC20 tokens
  * allowed by the organization.
  *
- * Handler address is responsible for changing sensitive information realted to the organization
+ * Governer address is responsible for changing sensitive information realted to the organization
  * and withdrawing fees.
  */
 contract Examiner is EIP712{
@@ -36,7 +36,7 @@ contract Examiner is EIP712{
     /**
      * @dev Address of the organization.
      */
-    address private handler;
+    address private governer;
 
     /**
      * @dev Method used to calculate the fee
@@ -99,15 +99,15 @@ contract Examiner is EIP712{
     );
 
     // modifiers
-    modifier onlyHandler(){
-        require(msg.sender == handler, "Unauthorized Call!");
+    modifier onlyGoverner(){
+        require(msg.sender == governer, "Unauthorized Call!");
         _;
     }
 
-    constructor(uint fee, address org_, address handler_) EIP712('szeeta', '0.0.1'){
+    constructor(uint fee, address org_, address governer_) EIP712('szeeta', '0.0.1'){
         feeFactor = fee;
         org = org_;
-        handler = handler_;
+        governer = governer_;
     }
 
     // public functions
@@ -266,22 +266,22 @@ contract Examiner is EIP712{
      * Value to withdraw is passed as and argument and not setting the amount to be contract balance is to avoid
      * any errors due to order of execution 
      */
-    function withdraw(uint amount) external onlyHandler{
-        transferNativeFunds(amount, handler);
+    function withdraw(uint amount) external onlyGoverner{
+        transferNativeFunds(amount, governer);
     }
 
     /**
      * @dev restricted function to change organization address
      */
-    function changeOrg(address newOrg) external onlyHandler{
+    function changeOrg(address newOrg) external onlyGoverner{
         org = newOrg;
     }
 
     /**
-     * @dev restricted function to change handler address
+     * @dev restricted function to change governer address
      */
-    function changeHandler(address newHandler) external onlyHandler{
-        handler = newHandler;
+    function changeGoverner(address newGoverner) external onlyGoverner{
+        governer = newGoverner;
     }
 
     // utils

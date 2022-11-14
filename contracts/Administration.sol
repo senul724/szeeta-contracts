@@ -23,7 +23,7 @@ import "./interfaces/IFactory.sol";
  * Last and the main functionality of the contract is handling NFT rewards that includes intiating
  * new instances, minting and managing ownership through out the lifetime of the event.
  *
- * All the mutations restricted for the Creator is done by the handler.
+ * All the mutations restricted for the Creator is done by the governer.
  */
 contract Administration is EIP712{
     /**
@@ -37,9 +37,9 @@ contract Administration is EIP712{
     address public factory;
 
     /**
-     * @dev Address of the handler.
+     * @dev Address of the governer.
      */
-    address private handler;
+    address private governer;
 
     /**
      * @dev Base contract address of the custome NFT collection.
@@ -123,15 +123,15 @@ contract Administration is EIP712{
       _;
     }
 
-    modifier onlyHandler(){
-      require(msg.sender == handler, "Unauthorized call!");
+    modifier onlyGoverner(){
+      require(msg.sender == governer, "Unauthorized call!");
       _;
     }
 
-    constructor(uint feeFactor_, address org_, address handler_, address base_) EIP712('szeeta', '0.0.1'){
+    constructor(uint feeFactor_, address org_, address governer_, address base_) EIP712('szeeta', '0.0.1'){
         feeFactor = feeFactor_;
         org = org_;
-        handler = handler_;
+        governer = governer_;
         base = base_;
         eventCounter = 1;
     }
@@ -229,7 +229,7 @@ contract Administration is EIP712{
      * @dev Adding new network support by deploying a network admin specific to the 
      * new network intended to supoort.
      */
-    function addNetwork(uint netId) external onlyHandler{
+    function addNetwork(uint netId) external onlyGoverner{
         require(networkAdmins[netId] == address(0), "Network already initialized!");
         NetworkAdmin newNetwork = new NetworkAdmin(netId);
         networkAdmins[netId] = address(newNetwork);
@@ -258,14 +258,14 @@ contract Administration is EIP712{
     /**
      * @dev Function to add the public NFT collection address after minting the contract.
      */
-    function addPublicCollectionAddress(address collectionAddress) external onlyHandler{
+    function addPublicCollectionAddress(address collectionAddress) external onlyGoverner{
         publicCollectionAddress = collectionAddress;
     }
 
     /**
      * @dev Function to add the custom NFT factory address.
      */
-    function addCollectionFactory(address factoryAddress) external onlyHandler{
+    function addCollectionFactory(address factoryAddress) external onlyGoverner{
         factory = factoryAddress;
     }
 
@@ -336,21 +336,21 @@ contract Administration is EIP712{
     /**
      * @dev restricted function to change organization address.
      */
-    function changeOrg(address newOrg) external onlyHandler{
+    function changeOrg(address newOrg) external onlyGoverner{
         org = newOrg;
     }
 
     /**
-     * @dev restricted function to change handler address.
+     * @dev restricted function to change governer address.
      */
-    function changeHandler(address newHandler) external onlyHandler{
-        handler = newHandler;
+    function changeGoverner(address newGoverner) external onlyGoverner{
+        governer = newGoverner;
     }
 
     /**
      * @dev Funtion for changing the fee factor.
      */
-    function changeFeeFactor(uint newFeeFactor) external onlyHandler{
+    function changeFeeFactor(uint newFeeFactor) external onlyGoverner{
         feeFactor = newFeeFactor;
     }
 }
