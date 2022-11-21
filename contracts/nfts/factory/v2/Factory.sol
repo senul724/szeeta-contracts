@@ -44,16 +44,16 @@ contract Factory{
 
     /**
      * @dev EIP1167 minimal proxy code snippet from Openzeppalin Clones contract for cheap
-     * deployement.
+     * deployment.
      */
-    function clone(address base_) internal returns (address instance) {
+    function clone(address implementation) internal returns (address instance) {
         
         assembly {
             // Cleans the upper 96 bits of the `implementation` word, then packs the first 3 bytes
             // of the `implementation` address with the bytecode before the address.
-            mstore(0x00, or(shr(0xe8, shl(0x60, base_)), 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000))
+            mstore(0x00, or(shr(0xe8, shl(0x60, implementation)), 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000))
             // Packs the remaining 17 bytes of `implementation` with the bytecode after the address.
-            mstore(0x20, or(shl(0x78, base_), 0x5af43d82803e903d91602b57fd5bf3))
+            mstore(0x20, or(shl(0x78, implementation), 0x5af43d82803e903d91602b57fd5bf3))
             instance := create(0, 0x09, 0x37)
         }
         require(instance != address(0), "ERC1167: create failed");
