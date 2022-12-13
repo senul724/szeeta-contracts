@@ -113,6 +113,37 @@ contract Administration is EIP712{
      */
     mapping(uint256 => bool) private isExpired;
 
+    // events
+    event EventCreated(
+        uint256 indexed eventId,
+        address indexed owner,
+        ChainData[] data
+    );
+
+    event EventTransfered(
+        uint256 indexed eventId,
+        address indexed newOwner,
+        address exOwner
+    );
+
+    event EventClosed(
+        address indexed owner,
+        uint256 eventId,
+        uint256 time
+    );
+
+    event ReceiverChanged(
+        address indexed newReceiver,
+        uint256 indexed network,
+        uint256 eventId
+    );
+
+    event NFTMinted(
+        uint256 indexed eventId,
+        address indexed contributor,
+        address indexed collection
+    );
+
     // modifiers
     modifier onlyOrg(){
       require(msg.sender == org, "Unauthorized call!");
@@ -138,7 +169,7 @@ contract Administration is EIP712{
      * the contract through the organization private key.
      * @param chainData Array of ChainData. Creator must atleast select one supported network to create an event.
      */
-    function createEvent(address owner, ChainData[] calldata chainData) external onlyOrg returns(uint){
+    function createEvent(address owner, ChainData[] memory chainData) external onlyOrg returns(uint){
         require(chainData.length != 0, "Chain Data Empty!");
 
         /**
@@ -147,13 +178,15 @@ contract Administration is EIP712{
         uint eventId = eventCounter;
         owners[eventId] = owner;
         for(uint i; i<chainData.length;){
-            ChainData calldata data = chainData[i];
+            ChainData memory data = chainData[i];
             NetworkAdmin(networkAdmins[data.netId]).changeReceiver( data.receiver, eventId);
             unchecked{
                 i++;
             }
         }
         eventCounter ++;
+
+        emit EventCreated(eventId, owner, chainData);
         return eventId;
     }
 
@@ -176,6 +209,8 @@ contract Administration is EIP712{
     {
         authorizedAndOpen(cause, caller, eventId, nonce, signature);
         NetworkAdmin(networkAdmins[chainId]).changeReceiver(newReceiver, eventId);
+
+        emit ReceiverChanged(newReceiver, chainId, eventId);
     }
 
     /**
@@ -199,6 +234,8 @@ contract Administration is EIP712{
             IRewardNFT(nftContract).close();
         }
         closed[eventId] = true;
+
+        emit EventClosed(caller, eventId, block.timestamp);
     }
 
     /**
@@ -221,6 +258,8 @@ contract Administration is EIP712{
             IRewardNFT(nftContract).transferOwnership(newOwner);
         }
         owners[eventId] = newOwner;
+
+        emit EventTransfered(eventId, newOwner, caller);
     }
 
     /**
@@ -285,6 +324,7 @@ contract Administration is EIP712{
         // deploying the new NFT collection
         address contractAddress =  IFactory(factory).mintCollection(eventOwner, name, symbol, uri);
         customCollections[eventId] = contractAddress;
+
         return contractAddress;
     }
 
@@ -300,7 +340,10 @@ contract Administration is EIP712{
      * for the event.
      */
     function mintCustom(address contributor, uint256 eventId) external onlyOrg{
-        IRewardNFT(customCollections[eventId]).mint(contributor);
+        address collectionAddress = customCollections[eventId];
+        IRewardNFT(collectionAddress).mint(contributor);
+
+        emit NFTMinted(eventId, contributor, collectionAddress);
     }
 
     /**
@@ -309,6 +352,8 @@ contract Administration is EIP712{
      */
     function mintPublic(address contributor, uint256 eventId) external onlyOrg{
         ISzeetaEventRewards(publicCollectionAddress).mint(contributor, eventId);
+
+        emit NFTMinted(eventId, contributor, publicCollectionAddress);
     }
 
     /**
