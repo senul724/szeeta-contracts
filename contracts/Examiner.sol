@@ -88,6 +88,7 @@ contract Examiner is EIP712{
         uint256 indexed eventId,
         address indexed from,
         uint256 amount,
+        uint256 amountInUsd,
         uint256 fee
     );
     event tokenContribution(
@@ -95,6 +96,7 @@ contract Examiner is EIP712{
         address indexed from,
         address indexed token,
         uint256 amount,
+        uint256 amountInUsd,
         uint256 fee
     );
 
@@ -132,9 +134,10 @@ contract Examiner is EIP712{
      */
     function receiveTokenFunds(
         uint256 eventId,
-        uint256 amount, 
-        address token,
         address receiver,
+        uint256 amount, 
+        uint256 amountInUsd, 
+        address token,
         uint256 time,
         bytes calldata signature
     )
@@ -151,6 +154,7 @@ contract Examiner is EIP712{
             msg.sender,
             token,
             amount,
+            amountInUsd,
             fee
         );
     }
@@ -158,7 +162,16 @@ contract Examiner is EIP712{
     /**
      * @dev Functions to receive native currency contributions.
      */
-    function receiveNativeFunds(uint256 eventId, address receiver, uint256 time, bytes calldata signature) external payable{
+    function receiveNativeFunds(
+        uint256 eventId,
+        address receiver,
+        uint256 amountInUsd,
+        uint256 time,
+        bytes calldata signature
+    )
+         external
+         payable
+    {
         require(validateNative(eventId, receiver, time, signature));
         uint amount = msg.value;
         uint256 fee = amount / feeFactor;
@@ -167,6 +180,7 @@ contract Examiner is EIP712{
             eventId,
             msg.sender,
             amount,
+            amountInUsd,
             fee
         );
     }
