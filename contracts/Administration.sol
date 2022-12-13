@@ -72,6 +72,7 @@ contract Administration is EIP712{
      * token contributions.
      */
     struct AdminCall{
+        string cause;
         address caller;
         uint256 eventId;
         uint256 nonce;
@@ -82,7 +83,7 @@ contract Administration is EIP712{
      */
     bytes32 private constant adminTypeHash =
         keccak256(
-            'AdminCall(address caller,uint256 eventId,uint256 nonce)'
+            'AdminCall(string cause,address caller,uint256 eventId,uint256 nonce)'
         );
 
     /**
@@ -162,7 +163,8 @@ contract Administration is EIP712{
      * @dev Funtion to change the receiver of an event specific to the network.
      */
     function changeReceiver(
-        address newReceiver, 
+        address newReceiver,
+        string memory cause,
         uint256 chainId, 
         address caller, 
         uint256 eventId,
@@ -172,7 +174,7 @@ contract Administration is EIP712{
         external 
         onlyOrg
     {
-        authorizedAndOpen(caller, eventId, nonce, signature);
+        authorizedAndOpen(cause, caller, eventId, nonce, signature);
         NetworkAdmin(networkAdmins[chainId]).changeReceiver(newReceiver, eventId);
     }
 
@@ -182,6 +184,7 @@ contract Administration is EIP712{
      * NOTE: ONCE CLOSED AN EVENT CANNOT BE RE-OPENED
      */
     function close(
+        string memory cause,
         address caller,
         uint256 eventId,
         uint256 nonce,
@@ -191,7 +194,7 @@ contract Administration is EIP712{
         external
         onlyOrg
     {   
-        authorizedAndOpen(caller, eventId, nonce, signature);
+        authorizedAndOpen(cause, caller, eventId, nonce, signature);
         if(nftContract != address(0)){
             IRewardNFT(nftContract).close();
         }
@@ -203,6 +206,7 @@ contract Administration is EIP712{
      */
     function transferAuthority(
         address newOwner,
+        string memory cause,
         address caller,
         uint256 eventId,
         uint256 nonce,
@@ -211,7 +215,7 @@ contract Administration is EIP712{
         external
         onlyOrg
     {
-        authorizedAndOpen(caller, eventId, nonce, signature);
+        authorizedAndOpen(cause, caller, eventId, nonce, signature);
         address nftContract = customCollections[eventId];
         if(nftContract != address(0)){
             IRewardNFT(nftContract).transferOwnership(newOwner);
@@ -310,13 +314,19 @@ contract Administration is EIP712{
     /**
      * @dev Function to validate data sent for admin iteractions for event data manipulation.
      */
-    function authorizedAndOpen(address caller, uint eventId, uint256 nonce, bytes calldata signature) internal{
+    function authorizedAndOpen(string memory cause, address caller, uint eventId, uint256 nonce, bytes calldata signature) internal{
         require(!closed[eventId] ,"Event closed!");
         require(owners[eventId] == caller,"Unauthorized Call!");
         require(!isExpired[nonce], "Transaction Expired!");
         bytes32 typedDataHash = _hashTypedDataV4(
             keccak256(
-                abi.encode(adminTypeHash, caller, eventId, nonce)
+                abi.encode(
+                    adminTypeHash,
+                    keccak256(abi.encodePacked(cause)),
+                    caller,
+                    eventId,
+                    nonce
+                )
             )
         );
         address caller_ = ECDSA.recover(typedDataHash, signature);
