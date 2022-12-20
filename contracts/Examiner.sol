@@ -55,6 +55,7 @@ contract Examiner is EIP712{
     struct Token{
         uint256 eventId;
         uint256 amount;
+        uint256 usdAmount;
         address token;
         address receiver;
         uint256 time;
@@ -66,6 +67,7 @@ contract Examiner is EIP712{
      */
     struct Native{
         uint256 eventId;
+        uint256 usdAmount;
         address receiver;
         uint256 time;
     }
@@ -75,12 +77,12 @@ contract Examiner is EIP712{
      */
     bytes32 private constant tokenTypeHash =
         keccak256(
-            'Token(uint256 eventId,uint256 amount,address token,address receiver,uint256 time)'
+            'Token(uint256 eventId,uint256 amount,uint256 usdAmount,address token,address receiver,uint256 time)'
         );
 
     bytes32 private constant nativeTypeHash =
         keccak256(
-            'Native(uint256 eventId,address receiver,uint256 time)'
+            'Native(uint256 eventId,uint256 usdAmount,address receiver,uint256 time)'
         );  
 
     //events
@@ -134,17 +136,17 @@ contract Examiner is EIP712{
      */
     function receiveTokenFunds(
         uint256 eventId,
-        address receiver,
         uint256 amount, 
         uint256 amountInUsd, 
         address token,
+        address receiver,
         uint256 time,
         bytes calldata signature
     )
         external
         payable
     {
-        require(validateToken(eventId, amount, token, receiver, time, signature));
+        require(validateToken(eventId, amount, amountInUsd, token, receiver, time, signature));
         // calculating the fee
         uint256 fee = amount / feeFactor;
         transferTokenFunds(amount - fee, msg.sender, receiver, token);
@@ -164,15 +166,15 @@ contract Examiner is EIP712{
      */
     function receiveNativeFunds(
         uint256 eventId,
-        address receiver,
         uint256 amountInUsd,
+        address receiver,
         uint256 time,
         bytes calldata signature
     )
          external
          payable
     {
-        require(validateNative(eventId, receiver, time, signature));
+        require(validateNative(eventId, amountInUsd, receiver, time, signature));
         uint amount = msg.value;
         uint256 fee = amount / feeFactor;
         transferNativeFunds(amount - fee, receiver);
@@ -231,6 +233,7 @@ contract Examiner is EIP712{
     function validateToken(
         uint256 eventId, 
         uint256 amount, 
+        uint256 amountInUsd, 
         address token,
         address receiver,
         uint256 time,
@@ -243,7 +246,7 @@ contract Examiner is EIP712{
         require(block.timestamp < time, "Transaction expired");
         bytes32 typedDataHash = _hashTypedDataV4(
             keccak256(
-                abi.encode(tokenTypeHash, eventId, amount, token, receiver, time)
+                abi.encode(tokenTypeHash, eventId, amount, amountInUsd, token, receiver, time)
             )
         );
         return org == ECDSA.recover(typedDataHash, signature);
@@ -254,6 +257,7 @@ contract Examiner is EIP712{
      */
     function validateNative(
         uint256 eventId, 
+        uint256 amountInUsd, 
         address receiver,
         uint256 time,
         bytes calldata signature
@@ -265,7 +269,7 @@ contract Examiner is EIP712{
         require(block.timestamp < time, "Transaction expired");
         bytes32 typedDataHash = _hashTypedDataV4(
             keccak256(
-                abi.encode(nativeTypeHash, eventId, receiver, time)
+                abi.encode(nativeTypeHash, eventId, amountInUsd, receiver, time)
             )
         );
         return org == ECDSA.recover(typedDataHash, signature);
