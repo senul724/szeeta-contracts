@@ -6,7 +6,7 @@ const mumbai_rpc = "https://polygon-mumbai.g.alchemy.com/v2/ileRGQPiVmSJfxyqyF1n
 const pvt = "c7c880a37ebc1713391673184f13a89158c5ddca9a72538a1d632fd2878e2f5b"
 
 const rawAbi = require('../build/Administration.sol/Administration.json').abi;
-const abi = new Interface(abi).format(FormatTypes.full);
+const abi = new Interface(rawAbi).format(FormatTypes.full);
 
 // derived
 const provider = new ethers.providers.JsonRpcProvider(mumbai_rpc)
