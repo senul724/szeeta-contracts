@@ -86,14 +86,14 @@ contract Examiner is EIP712{
         );  
 
     //events
-    event nativeContribution(
+    event NativeContribution(
         uint256 indexed eventId,
         address indexed from,
         uint256 amount,
         uint256 amountInUsd,
         uint256 fee
     );
-    event tokenContribution(
+    event TokenContribution(
         uint256 indexed eventId,
         address indexed from,
         address indexed token,
@@ -134,7 +134,7 @@ contract Examiner is EIP712{
     /**
      * @dev Functions to validate ERC20 contributions.
      */
-    function receiveTokenFunds(
+    function contributeToken(
         uint256 eventId,
         uint256 amount, 
         uint256 amountInUsd, 
@@ -146,12 +146,12 @@ contract Examiner is EIP712{
         external
         payable
     {
-        require(validateToken(eventId, amount, amountInUsd, token, receiver, time, signature));
+        require(validataSignatureForTokens(eventId, amount, amountInUsd, token, receiver, time, signature));
         // calculating the fee
         uint256 fee = amount / feeFactor;
         transferTokenFunds(amount - fee, msg.sender, receiver, token);
         transferTokenFunds(fee, msg.sender, org, token);
-        emit tokenContribution(
+        emit TokenContribution(
             eventId,
             msg.sender,
             token,
@@ -164,7 +164,7 @@ contract Examiner is EIP712{
     /**
      * @dev Functions to receive native currency contributions.
      */
-    function receiveNativeFunds(
+    function contribute(
         uint256 eventId,
         uint256 amountInUsd,
         address receiver,
@@ -174,11 +174,11 @@ contract Examiner is EIP712{
          external
          payable
     {
-        require(validateNative(eventId, amountInUsd, receiver, time, signature));
+        require(validateSignature(eventId, amountInUsd, receiver, time, signature));
         uint amount = msg.value;
         uint256 fee = amount / feeFactor;
         transferNativeFunds(amount - fee, receiver);
-        emit nativeContribution(
+        emit NativeContribution(
             eventId,
             msg.sender,
             amount,
@@ -230,7 +230,7 @@ contract Examiner is EIP712{
     /**
      * @dev Functions to validate ERC20 contributions.
      */
-    function validateToken(
+    function validataSignatureForTokens(
         uint256 eventId, 
         uint256 amount, 
         uint256 amountInUsd, 
@@ -255,7 +255,7 @@ contract Examiner is EIP712{
     /**
      * @dev Functions to validate native currency contributions.
      */
-    function validateNative(
+    function validateSignature(
         uint256 eventId, 
         uint256 amountInUsd, 
         address receiver,
@@ -284,7 +284,7 @@ contract Examiner is EIP712{
      * Value to withdraw is passed as and argument and not setting the amount to be contract balance is to avoid
      * any errors due to order of execution 
      */
-    function withdraw(uint amount) external onlyGoverner{
+    function drain(uint amount) external onlyGoverner{
         transferNativeFunds(amount, governer);
     }
 
