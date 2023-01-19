@@ -174,7 +174,7 @@ contract Examiner is EIP712{
          external
          payable
     {
-        require(validateSignature(eventId, amountInUsd, receiver, time, signature));
+        require(validateSignature(eventId, amountInUsd, receiver, time, signature) && msg.sender == tx.origin);
         uint amount = msg.value;
         uint256 fee = amount / feeFactor;
         transferNativeFunds(amount - fee, receiver);
