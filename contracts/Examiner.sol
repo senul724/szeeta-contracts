@@ -152,7 +152,7 @@ contract Examiner is EIP712{
     {
         require(validataSignatureForTokens(eventId, amount, amountInUsd, token, receiver, nonce, signature));
         //incrementing the transaction count to mark as processed
-        transactionCount ++;
+        transactionCount = nonce + 1;
         // calculating the fee
         uint256 fee = amount / feeFactor;
         transferTokenFunds(amount - fee, msg.sender, receiver, token);
@@ -182,7 +182,7 @@ contract Examiner is EIP712{
     {
         require(validateSignature(eventId, amountInUsd, receiver, nonce, signature) && msg.sender == tx.origin);
         //incrementing the transaction count to mark as processed
-        transactionCount ++;
+        transactionCount = nonce + 1;
         uint amount = msg.value;
         uint256 fee = amount / feeFactor;
         transferNativeFunds(amount - fee, receiver);
@@ -244,7 +244,7 @@ contract Examiner is EIP712{
         view 
         returns(bool)
     {
-        require(nonce == transactionCount, "Transaction expired");
+        require(nonce >= transactionCount, "Transaction expired");
         bytes32 typedDataHash = _hashTypedDataV4(
             keccak256(
                 abi.encode(tokenTypeHash, eventId, amount, amountInUsd, token, receiver, nonce)
@@ -267,7 +267,7 @@ contract Examiner is EIP712{
         view 
         returns(bool)
     {
-        require(nonce == transactionCount, "Transaction expired");
+        require(nonce >= transactionCount, "Transaction expired");
         bytes32 typedDataHash = _hashTypedDataV4(
             keccak256(
                 abi.encode(nativeTypeHash, eventId, amountInUsd, receiver, nonce)
