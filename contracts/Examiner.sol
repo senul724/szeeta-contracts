@@ -188,7 +188,7 @@ contract Examiner is EIP712{
         require(
             msg.sender == tx.origin &&
             msg.value == amount &&
-            validateSignature(eventId, amountInUsd, receiver, nonce, signature)
+            validateSignature(eventId, amount amountInUsd, receiver, nonce, signature)
         );
         //incrementing the transaction count to mark as processed
         transactionCount = nonce + 1;
@@ -266,6 +266,7 @@ contract Examiner is EIP712{
      */
     function validateSignature(
         uint256 eventId, 
+        uint256 amount,
         uint256 amountInUsd, 
         address receiver,
         uint256 nonce,
@@ -278,7 +279,7 @@ contract Examiner is EIP712{
         require(nonce >= transactionCount, "Transaction expired");
         bytes32 typedDataHash = _hashTypedDataV4(
             keccak256(
-                abi.encode(nativeTypeHash, eventId, amountInUsd, receiver, nonce)
+                abi.encode(nativeTypeHash, eventId, amount, amountInUsd, receiver, nonce)
             )
         );
         return org == ECDSA.recover(typedDataHash, signature);
