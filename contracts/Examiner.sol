@@ -152,7 +152,6 @@ contract Examiner is EIP712{
         payable
     {
         require(
-            msg.sender == tx.origin &&
             validataSignatureForTokens(eventId, amount, amountInUsd, token, receiver, nonce, signature)
         );
         //incrementing the transaction count to mark as processed
@@ -186,7 +185,6 @@ contract Examiner is EIP712{
          payable
     {
         require(
-            msg.sender == tx.origin &&
             msg.value == amount &&
             validateSignature(eventId, amount, amountInUsd, receiver, nonce, signature)
         );
