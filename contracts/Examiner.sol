@@ -36,7 +36,7 @@ contract Examiner is EIP712{
     /**
      * @dev Address of the organization.
      */
-    address private governor;
+    address public governor;
 
     /**
      * @dev Method used to calculate the fee
