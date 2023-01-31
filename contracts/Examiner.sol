@@ -6,7 +6,9 @@ import "./openzeppalin-utils/SafeERC20.sol";
 import "./openzeppalin-utils/EIP712.sol";
 
 /**
- * @dev Examiner is a contract that facilitates effective contribution collection
+ * @dev Examiner contract of Szeeta
+ * 
+ * Examiner is a contract that facilitates effective contribution collection
  * with blockchain tech.
  *
  * Functionality of the contract is to receive contributions, validate the transactions,
