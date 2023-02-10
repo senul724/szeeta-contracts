@@ -8,9 +8,6 @@ import "./openzeppalin-utils/EIP712.sol";
 /**
  * @dev Examiner contract of Szeeta
  * 
- * Examiner is a contract that facilitates effective contribution collection
- * with blockchain tech.
- *
  * Functionality of the contract is to receive contributions, validate the transactions,
  * deduct the fee and transfer the funds to the specific receiver.
  *
@@ -24,7 +21,7 @@ import "./openzeppalin-utils/EIP712.sol";
  * Governor address is responsible for changing sensitive information related to the organization
  * and withdrawing fees.
  */
-contract Examiner is EIP712{
+contract SzeetaExaminer is EIP712{
     /**
      *@dev SafeERC20 wrapper is used for ERC20 transactions.
      */
@@ -49,7 +46,7 @@ contract Examiner is EIP712{
     uint256 public feeFactor;
 
     // Keeps track of the processed transaction count
-    uint256 private transactionCount;
+    uint256 private transactionCount = 1;
 
     // Structs
 
@@ -99,6 +96,7 @@ contract Examiner is EIP712{
         uint256 amountInUsd,
         uint256 fee
     );
+
     event TokenContribution(
         uint256 indexed eventId,
         address indexed from,
@@ -114,11 +112,10 @@ contract Examiner is EIP712{
         _;
     }
 
-    constructor(uint fee, address org_, address governor_) EIP712('szeeta', '0.0.1'){
+    constructor(uint256 fee, address org_) EIP712('szeeta', '0.0.1'){
         feeFactor = fee;
         org = org_;
-        governor = governor_;
-        transactionCount = 1;
+        governor = msg.sender;
     }
 
     // public functions
@@ -154,9 +151,9 @@ contract Examiner is EIP712{
         payable
     {
         require(
-            validataSignatureForTokens(eventId, amount, amountInUsd, token, receiver, nonce, signature)
+            validateSignatureToken(eventId, amount, amountInUsd, token, receiver, nonce, signature)
         );
-        //incrementing the transaction count to mark it as processed
+        //incrementing the transaction count to mark as processed
         transactionCount = nonce + 1;
         // calculating the fee
         uint256 fee = amount / feeFactor;
@@ -188,9 +185,9 @@ contract Examiner is EIP712{
     {
         require(
             msg.value == amount &&
-            validateSignature(eventId, amount, amountInUsd, receiver, nonce, signature)
+            validateSignatureNative(eventId, amount, amountInUsd, receiver, nonce, signature)
         );
-        //incrementing the transaction count to mark it as processed
+        //incrementing the transaction count to mark as processed
         transactionCount = nonce + 1;
         uint256 fee = amount / feeFactor;
         transferNativeFunds(amount - fee, receiver);
@@ -239,7 +236,7 @@ contract Examiner is EIP712{
     /**
      * @dev Functions to validate ERC20 contributions.
      */
-    function validataSignatureForTokens(
+    function validateSignatureToken(
         uint256 eventId, 
         uint256 amount, 
         uint256 amountInUsd, 
@@ -264,7 +261,7 @@ contract Examiner is EIP712{
     /**
      * @dev Functions to validate native currency contributions.
      */
-    function validateSignature(
+    function validateSignatureNative(
         uint256 eventId, 
         uint256 amount,
         uint256 amountInUsd, 
@@ -294,7 +291,7 @@ contract Examiner is EIP712{
      * Value to withdraw is passed as an argument and not setting the amount to contract balance is to avoid
      * any errors due to order of execution 
      */
-    function drain(uint amount) external onlyGovernor{
+    function withdrawFee(uint256 amount) external onlyGovernor{
         transferNativeFunds(amount, governor);
     }
 
@@ -310,5 +307,12 @@ contract Examiner is EIP712{
      */
     function changeGovernor(address newGovernor) external onlyGovernor{
         governor = newGovernor;
+    }
+
+    /**
+     * @dev restricted function to change the fee factor
+     */
+    function changeFeeFactor(uint256 newFeeFactor) external onlyGovernor{
+        feeFactor = newFeeFactor;
     }
 }

@@ -7,9 +7,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 /**
- * @dev Contract is for Szeeta event creators to reward their contributors for
- * acheiving certain milestones and who does not want to create a seperate collection
- * for the event.
+ * @dev Public reward contract is for Szeeta event creators to reward their contributors for
+ * achieving certain milestones without creating a custom collection dedicated to the event.
  *
  * Since the contract is only callable by the administration contract, the
  * milestone is not stored in the contract to be more flexible. When the milestone
@@ -17,11 +16,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
  * the organization which will validate at mint it for them.
  *
  * In this case the owner will use a publicly available collection for all creator
- * to reward their contributors and owner will have no separate ownership rights
+ * to reward their contributors and the owner will have no separate ownership rights
  * for the collection.
  *
- * And the event owner initiate the reward system by calling the contract through
- * the administration contract and assiging the token URI.
+ * And the event owner initiates the reward system by calling the contract through
+ * the administration contract and assigning the token URI.
  */
 contract SzeetaEventRewards is ERC721, Ownable{
     /**
@@ -58,7 +57,7 @@ contract SzeetaEventRewards is ERC721, Ownable{
 
     /**
      * @dev restricted function for an event to initiate rewards by assigning the token
-     * URI which is non modifiable.
+     * URI which is non-modifiable.
      */
     function addEventUri(uint eventId, string memory metadataUri) external onlyOwner{
         require(bytes(eventURI[eventId]).length == 0, "Already Assigned!");

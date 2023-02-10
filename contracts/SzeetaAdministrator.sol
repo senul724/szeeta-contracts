@@ -1,33 +1,33 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "./NetworkAdmin.sol";
+import "./SzeetaNetworkAdmin.sol";
 import "./openzeppalin-utils/EIP712.sol";
 import "./interfaces/IRewardNFT.sol";
 import "./interfaces/ISzeetaEventRewards.sol";
 import "./interfaces/IFactory.sol";
 
 /**
- * @dev Contract manages event information throught out all supoorted network.
+ * @dev Contract manages event information throughout all supported networks.
  *
- * Contract deploys a network admin didicated to each network adn stores the network
+ * Contract deploys a network admin dedicated to each network and stores the network
  * specific data on the network admin contracts.
  *
- * Contract also manages all the admin functions that mainly includes manipulating sensitive
+ * Contract also manages all the admin functions that mainly include manipulating sensitive
  * data of an event such as the receiving address by the user. All admin interactions require
- * the event owner to sign required data and call the contract through the orgnaizations private
- * key to enable gassless transactions.
+ * the event owner to sign the required data and call the contract through the organization's private
+ * key to enable gasless transactions.
  *
- * Contract also records all the contributions received and realted fees.
+ * Contract also records all the contributions received and related fees.
  *
- * Last and the main functionality of the contract is handling NFT rewards that includes intiating
- * new instances, minting and managing ownership through out the lifetime of the event.
+ * Last and the main functionality of the contract is handling NFT rewards that include initiating
+ * new instances, minting and managing ownership throughout the lifetime of the event.
  *
- * All the mutations restricted for the Creator is done by the governer.
+ * All the mutations restricted for the Creator are done by the governor.
  */
-contract Administration is EIP712{
+contract SzeetaAdministrator is EIP712{
     /**
-     * @dev Address of the oragainzation.
+     * @dev Address of the organization.
      */
     address public org;
 
@@ -37,19 +37,19 @@ contract Administration is EIP712{
     address public factory;
 
     /**
-     * @dev Address of the governer.
+     * @dev Address of the governor.
      */
-    address private governer;
+    address public governor;
 
     /**
-     * @dev Event ids are assigned by a incremented state variable. 
+     * @dev Event ids are assigned by an incremented state variable. 
      */
     uint256 public eventCounter;
 
     /**
      * @dev Method used to calculate the fee
-     * When the amount is devided by the fee factor, the quotient will be the fee.
-     * example: If the fee is 1%, feeFactor will be 100.
+     * When the amount is divided by the fee factor, the quotient will be the fee.
+     * Example: If the fee is 1%, feeFactor will be 100.
      */
     uint256 public feeFactor;
 
@@ -60,7 +60,7 @@ contract Administration is EIP712{
 
     /**
      * @dev For getting network information required when creating an event.
-     * Contains the chain id adn the receiving address of the specific network.
+     * Contains the chain id and the receiving address of the specific network.
      */
     struct ChainData{
         uint256 netId;
@@ -92,12 +92,12 @@ contract Administration is EIP712{
     mapping(uint256 => address) public owners;
 
     /**
-     * @dev Keeps in track of the closed and opened state of an event.
+     * @dev Keeps track of the closed and opened state of an event.
      */
     mapping(uint256 => bool) public closed;
 
     /**
-     * @dev Keeps in-track of the network admins.
+     * @dev Keeps track of the network admins.
      * Description available in the networkAdmin contract description.
      */
     mapping(uint256 => address) public networkAdmins;
@@ -109,7 +109,7 @@ contract Administration is EIP712{
     mapping(uint256 => address) public customCollections;
 
     /**
-     * @dev Keeps intrack of the processed transactions.
+     * @dev Keeps track of the processed transactions.
      */
     mapping(uint256 => bool) private isExpired;
 
@@ -150,36 +150,36 @@ contract Administration is EIP712{
       _;
     }
 
-    modifier onlyGoverner(){
-      require(msg.sender == governer, "Unauthorized call!");
+    modifier onlyGovernor(){
+      require(msg.sender == governor, "Unauthorized call!");
       _;
     }
 
-    constructor(uint feeFactor_, address org_, address governer_) EIP712('szeeta', '0.0.1'){
+    constructor(uint feeFactor_, address org_, address governor_) EIP712('szeeta', '0.0.1'){
         feeFactor = feeFactor_;
         org = org_;
-        governer = governer_;
+        governor = governor_;
         eventCounter = 1;
     }
 
     /**
      * @dev Events are created by assigning an event id.
      *
-     * @param owner Address of the event owner. Only owner can manipulate the event data by calling
-     * the contract through the organization private key.
-     * @param chainData Array of ChainData. Creator must atleast select one supported network to create an event.
+     * @param owner Address of the event owner. Only the owner can manipulate the event data by calling
+     * the contract through the organization's private key.
+     * @param chainData Array of ChainData. The creator must at least select one supported network to create an event.
      */
     function createEvent(address owner, ChainData[] memory chainData) external onlyOrg returns(uint){
         require(chainData.length != 0, "Chain Data Empty!");
 
         /**
-         * @dev Asigning event id to a local varible to save gas
+         * @dev Assigning event id to a local variable to save gas
          */
         uint eventId = eventCounter;
         owners[eventId] = owner;
         for(uint i; i<chainData.length;){
             ChainData memory data = chainData[i];
-            NetworkAdmin(networkAdmins[data.netId]).changeReceiver( data.receiver, eventId);
+            SzeetaNetworkAdmin(networkAdmins[data.netId]).changeReceiver( data.receiver, eventId);
             unchecked{
                 i++;
             }
@@ -193,7 +193,7 @@ contract Administration is EIP712{
     // Functions of event administration
 
     /**
-     * @dev Funtion to change the receiver of an event specific to the network.
+     * @dev Function to change the receiver of an event specific to the network.
      */
     function changeReceiver(
         address newReceiver,
@@ -208,7 +208,7 @@ contract Administration is EIP712{
         onlyOrg
     {
         authorizedAndOpen(cause, caller, eventId, nonce, signature);
-        NetworkAdmin(networkAdmins[chainId]).changeReceiver(newReceiver, eventId);
+        SzeetaNetworkAdmin(networkAdmins[chainId]).changeReceiver(newReceiver, eventId);
 
         emit ReceiverChanged(newReceiver, chainId, eventId);
     }
@@ -216,7 +216,7 @@ contract Administration is EIP712{
     /**
      * @dev Function close an event
      *
-     * NOTE: ONCE CLOSED AN EVENT CANNOT BE RE-OPENED
+     * NOTE: ONCE CLOSED AN EVENT CAN NOT BE RE-OPENED
      */
     function close(
         string memory cause,
@@ -264,11 +264,11 @@ contract Administration is EIP712{
 
     /**
      * @dev Adding new network support by deploying a network admin specific to the 
-     * new network intended to supoort.
+     * new network intended to support.
      */
-    function addNetwork(uint netId) external onlyGoverner{
+    function addNetwork(uint netId) external onlyGovernor{
         require(networkAdmins[netId] == address(0), "Network already initialized!");
-        NetworkAdmin newNetwork = new NetworkAdmin(netId);
+        SzeetaNetworkAdmin newNetwork = new SzeetaNetworkAdmin(netId);
         networkAdmins[netId] = address(newNetwork);
     }
 
@@ -276,7 +276,7 @@ contract Administration is EIP712{
      * @dev Recording received native contributions.
      */
     function recordNativeContribution(uint eventId, uint amount, uint netId) external onlyOrg{
-        NetworkAdmin instance = NetworkAdmin(networkAdmins[netId]);
+        SzeetaNetworkAdmin instance = SzeetaNetworkAdmin(networkAdmins[netId]);
         require(instance.receivers(eventId) != address(0));
         instance.addNativeContributions(eventId, amount, feeFactor);
     }
@@ -285,7 +285,7 @@ contract Administration is EIP712{
      * @dev Recording received native contributions.
      */
     function recordTokenContribution(uint eventId, uint amount, uint netId, address token) external onlyOrg{
-        NetworkAdmin instance = NetworkAdmin(networkAdmins[netId]);
+        SzeetaNetworkAdmin instance = SzeetaNetworkAdmin(networkAdmins[netId]);
         require(instance.receivers(eventId) != address(0));
         instance.addTokenContributions(eventId, amount, token);
     }
@@ -295,14 +295,14 @@ contract Administration is EIP712{
     /**
      * @dev Function to add the public NFT collection address after minting the contract.
      */
-    function addPublicCollectionAddress(address collectionAddress) external onlyGoverner{
+    function addPublicCollectionAddress(address collectionAddress) external onlyGovernor{
         publicCollectionAddress = collectionAddress;
     }
 
     /**
      * @dev Function to add the custom NFT factory address.
      */
-    function addCollectionFactory(address factoryAddress) external onlyGoverner{
+    function addCollectionFactory(address factoryAddress) external onlyGovernor{
         factory = factoryAddress;
     }
 
@@ -329,14 +329,14 @@ contract Administration is EIP712{
     }
 
     /**
-     * @dev Funtion initiate event rewards in the public collection.
+     * @dev Function initiates event rewards in the public collection.
      */
     function joinPublicCollection(uint eventId, string memory metadataUri) external onlyOrg{
         ISzeetaEventRewards(publicCollectionAddress).addEventUri(eventId, metadataUri);
     }
 
     /**DeclarationError: Identifier already declared.
-     * @dev Function to mint an NFT on be-half of the contributor from the dedicated collection
+     * @dev Function to mint an NFT on behalf of the contributor from the dedicated collection
      * for the event.
      */
     function mintCustom(address contributor, uint256 eventId) external onlyOrg{
@@ -347,7 +347,7 @@ contract Administration is EIP712{
     }
 
     /**
-     * @dev Funtion to mint an NFT on be-half of the contributor from the public collection
+     * @dev Function to mint an NFT on behalf of the contributor from the public collection
      * for event rewards.
      */
     function mintPublic(address contributor, uint256 eventId) external onlyOrg{
@@ -357,7 +357,7 @@ contract Administration is EIP712{
     }
 
     /**
-     * @dev Function to validate data sent for admin iteractions for event data manipulation.
+     * @dev Function to validate data sent for admin interactions for event data manipulation.
      */
     function authorizedAndOpen(string memory cause, address caller, uint eventId, uint256 nonce, bytes calldata signature) internal{
         require(!closed[eventId] ,"Event closed!");
@@ -385,21 +385,21 @@ contract Administration is EIP712{
     /**
      * @dev restricted function to change organization address.
      */
-    function changeOrg(address newOrg) external onlyGoverner{
+    function changeOrg(address newOrg) external onlyGovernor{
         org = newOrg;
     }
 
     /**
-     * @dev restricted function to change governer address.
+     * @dev restricted function to change governor address.
      */
-    function changeGoverner(address newGoverner) external onlyGoverner{
-        governer = newGoverner;
+    function changeGovernor(address newGovernor) external onlyGovernor{
+        governor = newGovernor;
     }
 
     /**
-     * @dev Funtion for changing the fee factor.
+     * @dev Function for changing the fee factor.
      */
-    function changeFeeFactor(uint newFeeFactor) external onlyGoverner{
+    function changeFeeFactor(uint newFeeFactor) external onlyGovernor{
         feeFactor = newFeeFactor;
     }
 }

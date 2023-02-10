@@ -3,15 +3,15 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "forge-std/console.sol";
-import "../contracts/Examiner.sol";
+import "../contracts/SzeetaExaminer.sol";
 
 contract ExaminerTest is Test {
-    Examiner public examiner;
+    SzeetaExaminer public examiner;
 
     address realCaller = 0x15Cf49f835C5545810a2CCd4c8F71B17dc16aE22;
 
     function setUp() public {
-       examiner = new Examiner(2, realCaller, realCaller);
+       examiner = new SzeetaExaminer(2, realCaller);
     }
 
     function testOwnership() external {

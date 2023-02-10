@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity ^0.8.0;
 
-import "./RewardNFT.sol";
+import "./SzeetaCustomRewardNFT.sol";
 
 /**
- * @dev Contract mints custom collections and only callable by the Administrator.
+ * @dev Factory contract of Szeeta to mints custom collections.
+ * This contract is only callable by the Administrator.
  */
-contract Factory{
+contract SzeetaCustomRewardFactory{
     /**
      * @dev Address of the administration contract.
      */
@@ -17,7 +18,7 @@ contract Factory{
     }
 
     /**
-     * @dev Function mints a new custom NFT collection for event rewards.
+     * @dev Function mints a new custom NFT collection for Szeeta event rewards.
      */
     function mintCollection(
         address eventOwner,
@@ -30,7 +31,7 @@ contract Factory{
     {
         require(msg.sender == administration, "Unauthorized Call!");
         // deploying the new NFT collection
-        RewardNFT instance = new RewardNFT(eventOwner, administration, name, symbol, uri);
+        SzeetaCustomRewardNFT instance = new SzeetaCustomRewardNFT(eventOwner, administration, name, symbol, uri);
         return address(instance);
     }
 }

@@ -4,18 +4,18 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 /**
- * @dev Contract is used to reward Szeeta ccntributors for achieving certain milestones.
- * Every milestone has it's own URI mapped to it's unique id. And when minting the milestone
- * id is sent as and argument and the realted URI will be assigned to the token Id. 
+ * @dev Contract is used to reward Szeeta contributors for achieving certain milestones.
+ * Every milestone has its own URI mapped to its unique id. And when minting the milestone
+ * id is sent as an argument and the related URI will be assigned to the token Id. 
  *
- *And the milestone URIs are modifiable till the stable realease cause we beleive we will get
+ * And the milestone URIs are modifiable till the stable release cause we believe we will get
  * some awesome ideas from our beta users and might have to change the milestone images
  * accordingly for the best outcome. 
  *
  * And also, no modifications are allowed after the stable release. Only adding new milestones
  * are allowed.
  *
- * About athourity, org can mint and governer can modify state variable. Authourity is split for
+ * About authority, the org can mint and the governor can modify state variables. Authority is split for
  * security reasons.
  */
 contract SzeetaRewards is ERC721{
@@ -25,9 +25,9 @@ contract SzeetaRewards is ERC721{
     address public org;
 
     /**
-     * @dev Address of the governer.
+     * @dev Address of the governor.
      */
-    address public governer;
+    address public governor;
 
     /**
      * @dev Numerical incrementer is used to assign token ids.
@@ -35,7 +35,7 @@ contract SzeetaRewards is ERC721{
     uint256 public tokenCounter;
 
     /**
-     * @dev Keep the sate to avoid modifications after stable release.
+     * @dev Keep the state to avoid modifications after the stable release.
      */
     bool public isStable;
 
@@ -45,18 +45,18 @@ contract SzeetaRewards is ERC721{
     mapping (uint256 => uint256) private URIs;
 
     /**
-     * @dev Stores the milestone metdata URIs mapped to it's id.
+     * @dev Stores the milestone metadata URIs mapped to its id.
      */
     mapping (uint256 => string) public metadata;
 
-    constructor(address org_, address governer_)ERC721("Szeeta Rewards", "SZEETA"){
+    constructor(address org_, address governor_)ERC721("Szeeta Rewards", "SZEETA"){
         /**
          * @dev Token counter is incremented after assigning id. Therefore initial value
          * is 1.
          */
         tokenCounter = 1;
         org = org_;
-        governer = governer_;
+        governor = governor_;
     }
 
     function mint(address contributor, uint256 milestoneId) external returns(uint256){
@@ -77,10 +77,10 @@ contract SzeetaRewards is ERC721{
     }
 
     /**
-     * @dev Restricted function to assing milestone metadata URIs.
+     * @dev Restricted function to assign milestone metadata URIs.
      */
     function assignMetadata(uint256 id, string memory value) external{
-        require(msg.sender == governer, "Unauthorized Call!");
+        require(msg.sender == governor, "Unauthorized Call!");
 
         /**
          * @dev Statement to avoid reassigning milestone URIs after stable release.
@@ -90,11 +90,11 @@ contract SzeetaRewards is ERC721{
     }
 
     /**
-     * @dev Restricted function to relase stable version.
-     * This state is only changable once.
+     * @dev Restricted function to release the stable version.
+     * This state is only changeable once.
      */
     function releaseStable() external{
-        require(!isStable && msg.sender == governer, "Invalid Call!");
+        require(!isStable && msg.sender == governor, "Invalid Call!");
         isStable = true;
     }
 
