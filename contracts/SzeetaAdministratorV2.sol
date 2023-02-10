@@ -9,14 +9,10 @@ import "./interfaces/IFactory.sol";
 /**
  * @dev Contract manages event information throughout all supported networks.
  *
- * Contract stores the network specific event data.
- *
  * Contract also manages all the admin functions that mainly include manipulating sensitive
  * data of an event such as the receiving address by the user. All admin interactions require
  * the event owner to sign the required data and call the contract through the organization's private
  * key to enable gasless transactions.
- *
- * Contract also keeps track of all the contributions received by dumping transasction data into the blockchain.
  *
  * Last and the main functionality of the contract is handling NFT rewards that include initiating
  * new instances, minting and managing ownership throughout the lifetime of the event.
@@ -142,21 +138,6 @@ contract SzeetaAdministratorV2 is EIP712{
         address indexed collection
     );
 
-    event NativeContribution(
-        uint256 indexed eventId,
-        uint256 indexed network,
-        address receiver,
-        uint256 amount
-    );
-
-    event TokenContribution(
-        uint256 indexed eventId,
-        uint256 indexed network,
-        address indexed token,
-        address receiver,
-        uint256 amount
-    );
-
     // modifiers
     modifier onlyOrg(){
       require(msg.sender == org, "Unauthorized call!");
@@ -273,20 +254,6 @@ contract SzeetaAdministratorV2 is EIP712{
         owners[eventId] = newOwner;
 
         emit EventTransfered(eventId, newOwner, caller);
-    }
-
-    /**
-     * @dev Emits an event to dump the native contribution receieved by the event to the blockchain.
-     */
-    function recordNativeContribution(uint eventId, uint amount, uint netId) external onlyOrg{
-        emit NativeContribution(eventId, netId, receivers[netId][eventId], amount);
-    }
-
-    /**
-     * @dev Emits an event to dump the token contribution receieved by the event to the blockchain.
-     */
-    function recordTokenContribution(uint eventId, uint amount, uint netId, address token) external onlyOrg{
-        emit TokenContribution(eventId, netId, token, receivers[netId][eventId], amount);
     }
 
     // NFT interaction
