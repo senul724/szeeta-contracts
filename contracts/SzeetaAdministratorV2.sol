@@ -80,11 +80,19 @@ contract SzeetaAdministratorV2 is EIP712{
             'AdminCall(string cause,address caller,uint256 eventId,uint256 nonce)'
         );
 
-/**
- * @dev receivers mapping keep track of the receiving addresses related to events
- * where network is mapped to event id that is mapped to receiving address.
- */
-    mapping(uint256 => mapping(uint256 => address)) public receivers;
+    /**
+    * @dev receivers mapping keep track of the receiving addresses related to events
+    * where event id is mapped to array of addresses where the chain id is mapped to the
+    * index of the array that is dedicated to the reciever of the speocific network.
+    *
+    * This contract can support upto 8 networks.
+    */
+    mapping(uint256 => address[8]) public receivers;
+
+    /**
+     * @dev mapping of the chain id to the array index.
+     */
+    mapping(uint256 => uint256) public networks;
 
     /**
      * @dev Records the owners of the event.
@@ -111,7 +119,7 @@ contract SzeetaAdministratorV2 is EIP712{
     event EventCreated(
         uint256 indexed eventId,
         address indexed owner,
-        ChainData[] data
+        address[8] data
     );
 
     event EventTransfered(
@@ -163,21 +171,13 @@ contract SzeetaAdministratorV2 is EIP712{
      * the contract through the organization's private key.
      * @param chainData Array of ChainData. The creator must at least select one supported network to create an event.
      */
-    function createEvent(address owner, ChainData[] memory chainData) external onlyOrg returns(uint){
-        require(chainData.length != 0, "Chain Data Empty!");
-
+    function createEvent(address owner, address[8] memory chainData) external onlyOrg returns(uint){
         /**
          * @dev Assigning event id to a local variable to save gas
          */
         uint eventId = eventCounter;
         owners[eventId] = owner;
-        for(uint i; i<chainData.length;){
-            ChainData memory data = chainData[i];
-            receivers[data.netId][eventId] = data.receiver;
-            unchecked{
-                i++;
-            }
-        }
+        receivers[eventId] = chainData;
         eventCounter ++;
 
         emit EventCreated(eventId, owner, chainData);
@@ -202,7 +202,8 @@ contract SzeetaAdministratorV2 is EIP712{
         onlyOrg
     {
         authorizedAndOpen(cause, caller, eventId, nonce, signature);
-        receivers[chainId][eventId] = newReceiver;
+        uint256 networkIndex = networks[chainId];
+        receivers[eventId][networkIndex] = newReceiver;
 
         emit ReceiverChanged(newReceiver, chainId, eventId);
     }
@@ -347,6 +348,14 @@ contract SzeetaAdministratorV2 is EIP712{
     }
 
     // For organizational use
+
+    /**
+     * @dev Adding new networks by mapping netid with an availble slot in
+     * the recievers array.
+     */
+    function addNetwork(uint netId, uint index) external onlyGovernor{
+        networks[netId] = index;
+    }
 
     /**
      * @dev restricted function to change organization address.
