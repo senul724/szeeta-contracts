@@ -57,7 +57,7 @@ contract SzeetaAdministratorV2 is EIP712{
      * Contains the chain id and the receiving address of the specific network.
      */
     struct ChainData{
-        uint256 netId;
+        uint256 networkEventHash;
         address receiver;
     }
 
@@ -84,7 +84,7 @@ contract SzeetaAdministratorV2 is EIP712{
  * @dev receivers mapping keep track of the receiving addresses related to events
  * where network is mapped to event id that is mapped to receiving address.
  */
-    mapping(uint256 => mapping(uint256 => address)) public receivers;
+    mapping(uint256 => address) public receivers;
 
     /**
      * @dev Records the owners of the event.
@@ -128,8 +128,7 @@ contract SzeetaAdministratorV2 is EIP712{
 
     event ReceiverChanged(
         address indexed newReceiver,
-        uint256 indexed network,
-        uint256 eventId
+        uint256 indexed networkEventHash
     );
 
     event NFTMinted(
@@ -164,8 +163,6 @@ contract SzeetaAdministratorV2 is EIP712{
      * @param chainData Array of ChainData. The creator must at least select one supported network to create an event.
      */
     function createEvent(address owner, ChainData[] memory chainData) external onlyOrg returns(uint){
-        require(chainData.length != 0, "Chain Data Empty!");
-
         /**
          * @dev Assigning event id to a local variable to save gas
          */
@@ -173,7 +170,7 @@ contract SzeetaAdministratorV2 is EIP712{
         owners[eventId] = owner;
         for(uint i; i<chainData.length;){
             ChainData memory data = chainData[i];
-            receivers[data.netId][eventId] = data.receiver;
+            receivers[data.networkEventHash] = data.receiver;
             unchecked{
                 i++;
             }
@@ -192,7 +189,7 @@ contract SzeetaAdministratorV2 is EIP712{
     function changeReceiver(
         address newReceiver,
         string memory cause,
-        uint256 chainId, 
+        uint256 networkEventHash, 
         address caller, 
         uint256 eventId,
         uint nonce,
@@ -202,9 +199,9 @@ contract SzeetaAdministratorV2 is EIP712{
         onlyOrg
     {
         authorizedAndOpen(cause, caller, eventId, nonce, signature);
-        receivers[chainId][eventId] = newReceiver;
+        receivers[networkEventHash] = newReceiver;
 
-        emit ReceiverChanged(newReceiver, chainId, eventId);
+        emit ReceiverChanged(newReceiver, networkEventHash);
     }
 
     /**
@@ -223,6 +220,7 @@ contract SzeetaAdministratorV2 is EIP712{
         external
         onlyOrg
     {   
+        require(!closed[eventId], "Event already closed!");
         authorizedAndOpen(cause, caller, eventId, nonce, signature);
         if(nftContract != address(0)){
             IRewardNFT(nftContract).close();
@@ -326,7 +324,6 @@ contract SzeetaAdministratorV2 is EIP712{
      * @dev Function to validate data sent for admin interactions for event data manipulation.
      */
     function authorizedAndOpen(string memory cause, address caller, uint eventId, uint256 nonce, bytes calldata signature) internal{
-        require(!closed[eventId] ,"Event closed!");
         require(owners[eventId] == caller,"Unauthorized Call!");
         require(!isExpired[nonce], "Transaction Expired!");
         bytes32 typedDataHash = _hashTypedDataV4(
