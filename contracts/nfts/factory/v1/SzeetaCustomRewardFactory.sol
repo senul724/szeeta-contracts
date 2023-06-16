@@ -9,12 +9,18 @@ import "./SzeetaCustomRewardNFT.sol";
  */
 contract SzeetaCustomRewardFactory{
     /**
+     * @dev Address of the organization.
+     */
+    address public org;
+
+    /**
      * @dev Address of the administration contract.
      */
     address public administration;
 
-    constructor(address admin){
+    constructor(address admin, address org_){
       administration = admin;
+      org = org_;
     }
 
     /**
@@ -33,5 +39,13 @@ contract SzeetaCustomRewardFactory{
         // deploying the new NFT collection
         SzeetaCustomRewardNFT instance = new SzeetaCustomRewardNFT(eventOwner, administration, name, symbol, uri);
         return address(instance);
+    }
+
+    /**
+     * @dev Function to change administration contract
+     */
+    function changeAdministration(address newAdmin) external {
+      require(msg.sender == org, "Unauthorized Call!");
+      administration = newAdmin;
     }
 }
