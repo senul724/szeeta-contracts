@@ -5,9 +5,14 @@ import "./IRewardNFTV2.sol";
 
 /**
  * @dev Contract mints custom collections and only callable by the Administrator.
- * Factory v2 uses minimal proxy (EIP1167) for cheap deployment.
+ * Factory v2 uses minimal proxy (EIP1167) for deployment.
  */
 contract SzeetaCustomRewardFactoryV2{
+    /**
+     * @dev Address of the organization.
+     */
+    address public org;
+
     /**
      * @dev Address of the administration contract.
      */
@@ -18,7 +23,8 @@ contract SzeetaCustomRewardFactoryV2{
      */
     address private base;
 
-    constructor(address admin, address base_){
+    constructor(address admin, address org_, address base_){
+        org = org_;
         base = base_;
         administration = admin;
     }
@@ -43,8 +49,7 @@ contract SzeetaCustomRewardFactoryV2{
     }
 
     /**
-     * @dev EIP1167 minimal proxy code snippet from Openzeppalin Clones contract for cheap
-     * deployment.
+     * @dev EIP1167 minimal proxy code snippet from Openzeppalin Clones.
      */
     function clone(address implementation) internal returns (address instance) {
         
@@ -57,5 +62,13 @@ contract SzeetaCustomRewardFactoryV2{
             instance := create(0, 0x09, 0x37)
         }
         require(instance != address(0), "ERC1167: create failed");
+    }
+
+    /**
+     * @dev Function to change administration contract
+     */
+    function changeAdministration(address newAdmin) external {
+      require(msg.sender == org, "Unauthorized Call!");
+      administration = newAdmin;
     }
 }
