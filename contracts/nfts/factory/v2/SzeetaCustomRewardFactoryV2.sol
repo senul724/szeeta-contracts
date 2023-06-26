@@ -5,9 +5,9 @@ import "./IRewardNFTV2.sol";
 
 /**
  * @dev Contract mints custom collections and only callable by the Administrator.
- * Factory v2 uses minimal proxy (EIP1167) for cheap delpoyement.
+ * Factory v2 uses minimal proxy (EIP1167) for cheap deployment.
  */
-contract Factory{
+contract SzeetaCustomRewardFactoryV2{
     /**
      * @dev Address of the administration contract.
      */

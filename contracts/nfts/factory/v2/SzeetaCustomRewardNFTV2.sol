@@ -8,11 +8,6 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  * @dev Contract is for Szeeta event creators to reward their contributors for
  * acheiving certain milestones.
  *
- * Since the contract is only callable by the administration contract, the
- * milestone is not stored in the contract to be more flexible. When the milestone
- * is achieved, the contributor can mint the token without paying gas requesting
- * the organization which will validate at mint it for them.
- *
  * Although the owners cannot mint any token upoun their will, ownership of the contract
  * is transfered to the owner using the Openzeppelin Ownable utility contract is to give
  * them right to edit their collection settings and add royalties in application like
@@ -24,7 +19,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  * contract. After the event is closed, authority for transfering and renouncing ownership is given back
  * to the owner.
  */
-contract RewardNFT is Initializable, ERC721Upgradeable{
+contract SzeetaCustomRewardNFTV2 is Initializable, ERC721Upgradeable{
     /**
      * @dev Address of the event creator.
      */
